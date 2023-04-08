@@ -1,27 +1,11 @@
-#!/usr/bin/env python3
-
 """
-File: hypergrad_mnist.py
-Author: Seb Arnold - seba1511.net
-Email: smr.arnold@gmail.com
-Github: seba-1511
-Description: Demonstation of the LearnableOptimizer to optimize a CNN on MNIST. 
-
-While this example is inspired form the hypergradient literature, it differs
-from Hypergradient:
-    1. We do not use the analytical expression for the hypergradient, but
-       instead rely on autograd to compute it for us.
-    2. We learn a per-parameter learning rate rather than one shared across
-       all parameters.
-
-The network is inspired from the official MNIST example, in the PyTorch repo.
+Based on: https://github.com/learnables/learn2learn/blob/master/examples/optimization/hypergrad_mnist.py
 """
 
-import torch
-from torch.nn import functional as F
-import torchvision as tv
 import learn2learn as l2l
-import tqdm
+import torch
+import torchvision as tv
+from torch.nn import functional as F
 
 
 def accuracy(predictions, targets):
@@ -85,22 +69,22 @@ def main():
               'pin_memory': True} if torch.cuda.is_available() else {}
     train_loader = torch.utils.data.DataLoader(
         tv.datasets.MNIST('~/data', train=True, download=True,
-            transform=tv.transforms.Compose([
-                tv.transforms.ToTensor(),
-                tv.transforms.Normalize((0.1307,), (0.3081,))
-                ])),
-            batch_size=32, shuffle=True, **kwargs)
+                          transform=tv.transforms.Compose([
+                              tv.transforms.ToTensor(),
+                              tv.transforms.Normalize((0.1307,), (0.3081,))
+                          ])),
+        batch_size=32, shuffle=True, **kwargs)
     test_loader = torch.utils.data.DataLoader(
         tv.datasets.MNIST('~/data', train=False, transform=tv.transforms.Compose([
             tv.transforms.ToTensor(),
             tv.transforms.Normalize((0.1307,), (0.3081,))
-            ])),
+        ])),
         batch_size=128, shuffle=False, **kwargs)
 
     for epoch in range(10):
         # Train for an epoch
         model.train()
-        for X, y in tqdm.tqdm(train_loader, leave=False):
+        for X, y in tqdm.tqdm(train_loader, leave=False): # TODO: use rich
             X, y = X.to(device), y.to(device)
             metaopt.zero_grad()
             opt.zero_grad()
@@ -122,8 +106,8 @@ def main():
             test_error /= len(test_loader)
             test_accuracy /= len(test_loader)
         print('\nEpoch', epoch)
-        print('Loss:', test_error.item())
-        print('Accuracy:', test_accuracy.item())
+        print('Loss:', test_error)
+        print('Accuracy:', test_accuracy)
 
     # Print the learned learning rates of the model
     print('The learning rates were:')
