@@ -34,7 +34,7 @@ class ConvBlock(nn.Module):
 class CNNFeatEx(nn.Module):
     """
     Applies several ConvBlocks each doubling the number of channels, and
-    halving the feature map size, before taking a global average and classifying.
+    halving the feature map size.
     """
 
     def __init__(self, in_channels, num_blocks):
