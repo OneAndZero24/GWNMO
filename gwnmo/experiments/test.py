@@ -11,7 +11,7 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
 from gwnmo.utils import log
-
+from gwnmo.core import GWNMO
 
 def accuracy(predictions, targets):
     """Returns mean accuracy over a mini-batch"""
@@ -99,8 +99,8 @@ def main():
     target = Target()
     target.to(device)
 
-    metaopt = l2l.optim.LearnableOptimizer(
-        model=target, transform=MetaOptimizer, lr=0.1)
+    metaopt = GWNMO(
+        model=target, transform=MetaOptimizer)
     metaopt.to(device)
 
     opt = torch.optim.Adam(metaopt.parameters(), lr=3e-4)
@@ -130,9 +130,10 @@ def main():
             metaopt.zero_grad()
             opt.zero_grad()
             err = loss(target(X), y)
+            x_embd = target.fe(X).detach()
             err.backward()
             opt.step()  # Update metaopt parameters
-            metaopt.step()  # Update model parameters
+            metaopt.step(x_embd)  # Update model parameters
 
         target.eval()
         test_accuracy = 0.0
