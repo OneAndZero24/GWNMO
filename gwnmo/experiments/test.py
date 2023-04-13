@@ -3,10 +3,14 @@ Based on: https://github.com/learnables/learn2learn/blob/master/examples/optimiz
 """
 
 import learn2learn as l2l
+import neptune
 import torch
-from torch.utils.data import DataLoader
 import torchvision as tv
+from rich.progress import Progress
 from torch.nn import functional as F
+from torch.utils.data import DataLoader
+
+from gwnmo.utils import log
 
 
 def accuracy(predictions, targets):
@@ -14,7 +18,10 @@ def accuracy(predictions, targets):
     predictions = predictions.argmax(dim=1).view(targets.shape)
     return (predictions == targets).sum().float() / targets.size(0)
 
+
 class FeatEx(torch.nn.Module):
+    """Image feature extractor"""
+
     def __init__(self):
         super(FeatEx, self).__init__()
         self.conv1 = torch.nn.Conv2d(1, 32, 3, 1)
@@ -30,10 +37,12 @@ class FeatEx(torch.nn.Module):
 
 
 class GradFeatEx(torch.nn.Module):
+    """Gradient feature extractor"""
+
     def __init__(self, size):
         super(GradFeatEx, self).__init__()
         self.fc1 = torch.nn.Linear(size, 1024)
-        self.fc2 = torch.nn.Linear(size, 128)
+        self.fc2 = torch.nn.Linear(1024, 128)
 
     def forward(self, x):
         x = self.fc1(x)
@@ -44,6 +53,8 @@ class GradFeatEx(torch.nn.Module):
 
 
 class Target(torch.nn.Module):
+    """Target network"""
+
     def __init__(self):
         super(Target, self).__init__()
         self.fe = FeatEx()
@@ -59,9 +70,12 @@ class Target(torch.nn.Module):
 
 
 class MetaOptimizer(torch.nn.Module):
+    """Gradient weighting network"""
+
     def __init__(self):
         super(MetaOptimizer, self).__init__()
         grad_shape = len(list(Target().parameters()))
+        log.debug(f'Gradient Shape in Meta Optimizer: {grad_shape}')
         self.fe = GradFeatEx(grad_shape)
         self.fc1 = torch.nn.Linear(9344, 2048)
         self.fc2 = torch.nn.Linear(2048, 256)
@@ -74,37 +88,44 @@ class MetaOptimizer(torch.nn.Module):
         x = self.fc2(x)
         x = F.relu(x)
         x = self.fc3(x)
-        return x
+        return x * grad
+
 
 def main():
+    run = neptune.init_run()
     torch.manual_seed(1)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     target = Target()
     target.to(device)
-    metaopt = l2l.optim.LearnableOptimizer(model=target, transform=MetaOptimizer, lr=0.1)
+
+    metaopt = l2l.optim.LearnableOptimizer(
+        model=target, transform=MetaOptimizer, lr=0.1)
     metaopt.to(device)
+
     opt = torch.optim.Adam(metaopt.parameters(), lr=3e-4)
     loss = torch.nn.NLLLoss()
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
     train_loader = DataLoader(
         tv.datasets.MNIST('~/data', train=True, download=True,
-        transform=tv.transforms.Compose([
-            tv.transforms.ToTensor(),
-            tv.transforms.Normalize((0.1307,), (0.3081,))
-        ])),
+                          transform=tv.transforms.Compose([
+                              tv.transforms.ToTensor(),
+                              tv.transforms.Normalize((0.1307,), (0.3081,))
+                          ])),
         batch_size=32, shuffle=True, **kwargs)
     test_loader = DataLoader(
-        tv.datasets.MNIST('~/data', train=False, transform=tv.transforms.Compose([
-            tv.transforms.ToTensor(),
-            tv.transforms.Normalize((0.1307,), (0.3081,))
-        ])),
+        tv.datasets.MNIST('~/data', train=False,
+                          transform=tv.transforms.Compose([
+                              tv.transforms.ToTensor(),
+                              tv.transforms.Normalize((0.1307,), (0.3081,))
+                          ])),
         batch_size=128, shuffle=False, **kwargs)
 
-    for epoch in range(10):
-        # Train for an epoch
+    for epoch in range(100):
+        log.info(f'Epoch: {epoch}')
         target.train()
-        for X, y in tqdm.tqdm(train_loader, leave=False): # TODO: use rich
+        for _, (X, y) in enumerate(train_loader):
             X, y = X.to(device), y.to(device)
             metaopt.zero_grad()
             opt.zero_grad()
@@ -113,26 +134,16 @@ def main():
             opt.step()  # Update metaopt parameters
             metaopt.step()  # Update model parameters
 
-        # Compute test error
         target.eval()
-        test_error = 0.0
         test_accuracy = 0.0
         with torch.no_grad():
-            for X, y in test_loader:
+            for _, (X, y) in enumerate(test_loader):
                 X, y = X.to(device), y.to(device)
                 preds = target(X)
-                test_error += loss(preds, y)
                 test_accuracy += accuracy(preds, y)
-            test_error /= len(test_loader)
             test_accuracy /= len(test_loader)
-        print('\nEpoch', epoch)
-        print('Loss:', test_error)
-        print('Accuracy:', test_accuracy)
-
-    # Print the learned learning rates of the model
-    print('The learning rates were:')
-    for p in metaopt.parameters():
-        print(p)
+        log.info(f'Accuracy: {test_accuracy}')
+        run["accuracy"].append(test_accuracy)
 
 
 if __name__ == '__main__':

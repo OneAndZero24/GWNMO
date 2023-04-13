@@ -1,2 +1,2 @@
 import pkg_resources
-__version__ = pkg_resources.get_distribution('my-package-name').version
+__version__ = pkg_resources.get_distribution('gwnmo').version
