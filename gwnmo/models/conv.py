@@ -2,7 +2,6 @@
 Based on: https://pytorch.org/blog/FX-feature-extraction-torchvision/
 """
 
-import torch
 from torch import nn
 
 
