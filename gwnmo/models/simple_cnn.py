@@ -17,7 +17,6 @@ class SimpleCNN(nn.Module):
         for _ in range(depth):
             new_channels: int = channels*mul
             self.seq.append(nn.Conv2d(channels, new_channels, 3, 1))
-            self.seq.append(nn.ReLU())
 
             mul = min(1, int(mul/4))
             channels = new_channels

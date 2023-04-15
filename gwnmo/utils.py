@@ -22,7 +22,7 @@ def _setup_logger(log_level: str):
     return logging.getLogger("rich")
 
 
-log = _setup_logger("DEBUG")
+log = _setup_logger("INFO")
 
 
 def _setup_arg_parser():
