@@ -87,7 +87,6 @@ def exp(epochs: int):
         model=target, transform=MetaOptimizer)
     metaopt.to(device)
 
-    opt = torch.optim.Adam(metaopt.parameters(), lr=3e-4)
     loss = torch.nn.NLLLoss()
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {
@@ -106,6 +105,16 @@ def exp(epochs: int):
                               tv.transforms.Normalize((0.1307,), (0.3081,))
                           ])),
         batch_size=128, shuffle=False, **kwargs)
+
+    #Init metaopt parameters
+    (X, y) = next(iter(train_loader))
+    X, y = X.to(device), y.to(device)
+    err = loss(target(X), y)
+    x_embd = target.fe(X).detach()
+    err.backward()
+    metaopt.step(x_embd)
+
+    opt = torch.optim.Adam(metaopt.parameters(), lr=0.01)
 
     for epoch in range(epochs):
         log.info(f'Epoch: {epoch}')
