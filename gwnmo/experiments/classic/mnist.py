@@ -2,96 +2,80 @@
 Based on: https://github.com/learnables/learn2learn/blob/master/examples/optimization/hypergrad_mnist.py
 """
 
-import learn2learn as l2l
 import neptune
 import torch
 import torchvision as tv
-from rich.progress import Progress
+from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
-from gwnmo.utils import log
 from gwnmo.core import GWNMO
-
-def accuracy(predictions, targets):
-    """Returns mean accuracy over a mini-batch"""
-    predictions = predictions.argmax(dim=1).view(targets.shape)
-    return (predictions == targets).sum().float() / targets.size(0)
+from gwnmo.models.grad_fe import GradFeatEx
+from gwnmo.models.simple_cnn import SimpleCNN
+from gwnmo.utils import log, accuracy
 
 
-class FeatEx(torch.nn.Module):
-    """Image feature extractor"""
-
-    def __init__(self):
-        super(FeatEx, self).__init__()
-        self.conv1 = torch.nn.Conv2d(1, 32, 3, 1)
-        self.conv2 = torch.nn.Conv2d(32, 64, 3, 1)
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = F.relu(x)
-        x = self.conv2(x)
-        x = F.relu(x)
-        x = F.max_pool2d(x, 2)
-        return torch.flatten(x, 1)
-
-
-class GradFeatEx(torch.nn.Module):
-    """Gradient feature extractor"""
-
-    def __init__(self, size):
-        super(GradFeatEx, self).__init__()
-        self.fc1 = torch.nn.Linear(size, 1024)
-        self.fc2 = torch.nn.Linear(1024, 128)
-
-    def forward(self, x):
-        x = self.fc1(x)
-        x = F.relu(x)
-        x = self.fc2(x)
-        x = F.relu(x)
-        return x
-
-
-class Target(torch.nn.Module):
+class Target(nn.Module):
     """Target network"""
 
     def __init__(self):
         super(Target, self).__init__()
-        self.fe = FeatEx()
-        self.fc1 = torch.nn.Linear(9216, 128)
-        self.fc2 = torch.nn.Linear(128, 10)
+        self.fe = SimpleCNN(1, 3)
 
-    def forward(self, x):
+    def _gen_seq(self, size: int):
+        self.seq = nn.Sequential()
+        self.seq.append(nn.Linear(size, 1024))
+        self.seq.append(nn.Linear(1024, 128))
+        self.seq.append(nn.Linear(128, 10))
+
+    def forward(self, x: torch.Tensor):
         x = self.fe(x)
-        x = self.fc1(x)
-        x = F.relu(x)
-        x = self.fc2(x)
+
+        if not hasattr(self, 'seq'):
+            self._gen_seq(x.shape[0])
+        x = self.seq(x)
         return F.log_softmax(x, dim=1)
 
 
-class MetaOptimizer(torch.nn.Module):
+class MetaOptimizer(nn.Module):
     """Gradient weighting network"""
 
     def __init__(self):
         super(MetaOptimizer, self).__init__()
-        grad_shape = len(list(Target().parameters()))
-        log.debug(f'Gradient Shape in Meta Optimizer: {grad_shape}')
-        self.fe = GradFeatEx(grad_shape)
-        self.fc1 = torch.nn.Linear(9344, 2048)
-        self.fc2 = torch.nn.Linear(2048, 256)
-        self.fc3 = torch.nn.Linear(256, grad_shape)
+
+    def _gen_fe(self, size: torch.Size):
+        self.fe = GradFeatEx(size, 5)
+
+    def _gen_seq(self, size: int):
+        self.seq = nn.Sequential()
+        self.seq.append(nn.Linear(size, 2048))
+        self.seq.append(nn.ReLU())
+        self.seq.append(nn.Linear(2048, 1024))
+        self.seq.append(nn.ReLU())
+
+    def _gen_exit(self, size: int):
+        self.seq = nn.Sequential()
+        self.seq.append(nn.Linear(1024, size))
+        self.seq.append(nn.ReLU())
 
     def forward(self, grad, x_embd):
+        if not hasattr(self, 'fe'):
+            self._gen_fe(grad.shape)
         grad_embd = self.fe(grad)
-        x = self.fc1(torch.cat([grad_embd, x_embd]))
-        x = F.relu(x)
-        x = self.fc2(x)
-        x = F.relu(x)
-        x = self.fc3(x)
-        return x * grad
+
+        x = torch.cat([grad_embd, x_embd])
+
+        if not hasattr(self, 'seq'):
+            self._gen_seq(x.shape[0])
+        x = self.seq(x)
+
+        if not hasattr(self, 'exit'):
+            self._gen_exit(self.fe.size)
+
+        return torch.reshape(x, grad.shape)
 
 
-def main():
+def exp(epochs: int):
     run = neptune.init_run()
     torch.manual_seed(1)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -106,7 +90,8 @@ def main():
     opt = torch.optim.Adam(metaopt.parameters(), lr=3e-4)
     loss = torch.nn.NLLLoss()
 
-    kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
+    kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {
+    }
     train_loader = DataLoader(
         tv.datasets.MNIST('~/data', train=True, download=True,
                           transform=tv.transforms.Compose([
@@ -122,7 +107,7 @@ def main():
                           ])),
         batch_size=128, shuffle=False, **kwargs)
 
-    for epoch in range(100):
+    for epoch in range(epochs):
         log.info(f'Epoch: {epoch}')
         target.train()
         for _, (X, y) in enumerate(train_loader):
@@ -145,7 +130,3 @@ def main():
             test_accuracy /= len(test_loader)
         log.info(f'Accuracy: {test_accuracy}')
         run["accuracy"].append(test_accuracy)
-
-
-if __name__ == '__main__':
-    main()

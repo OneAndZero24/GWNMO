@@ -1,6 +1,8 @@
-import torch
-import learn2learn as l2l
 import warnings
+
+import learn2learn as l2l
+import numpy as np
+import torch
 
 
 class GWNMO(torch.nn.Module):
@@ -28,15 +30,21 @@ class GWNMO(torch.nn.Module):
 
             params = model.parameters()
 
-            grad = torch.Tensor([ param.grad.detach() for param in params if hasattr(param, 'grad') and param.grad is not None ])
+            def _get_grad(param: torch.nn.Parameter):
+                if hasattr(param, 'grad') and param.grad is not None:
+                    return param.grad.detach()
+                
+            grad: torch.Tensor = np.vectorize(_get_grad)(params)
             grad.requires_grad = False
 
             updates = -grad*self.transform(grad, x_embd)
 
-            for param, update in zip(params, updates):
+            i = 0
+            for param in params:
                 param.detach_()
                 param.requires_grad = False
-                param.update = update
+                param.update = updates[i] # type: ignore
+                i += 1
 
             l2l.update_module(model)
 
