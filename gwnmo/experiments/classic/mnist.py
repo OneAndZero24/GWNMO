@@ -2,7 +2,6 @@
 Based on: https://github.com/learnables/learn2learn/blob/master/examples/optimization/hypergrad_mnist.py
 """
 
-import neptune
 import torch
 import torchvision as tv
 from torch import nn
@@ -12,7 +11,7 @@ from torch.utils.data import DataLoader
 from gwnmo.core import GWNMO
 from gwnmo.models.grad_fe import GradFeatEx
 from gwnmo.models.simple_cnn import SimpleCNN
-from gwnmo.utils import log, accuracy
+from gwnmo.utils import log, accuracy, run, device
 
 
 class Target(nn.Module):
@@ -20,13 +19,11 @@ class Target(nn.Module):
 
     def __init__(self):
         super(Target, self).__init__()
-        self.fe = SimpleCNN(1, 3)
+        self.fe = SimpleCNN(1, 2)
 
     def _gen_seq(self, size: int):
         self.seq = nn.Sequential()
-        self.seq.append(nn.Linear(size, 1024))
-        self.seq.append(nn.Linear(1024, 128))
-        self.seq.append(nn.Linear(128, 10))
+        self.seq.append(nn.Linear(size, 10))
 
     def forward(self, x: torch.Tensor):
         x = self.fe(x)
@@ -34,6 +31,7 @@ class Target(nn.Module):
         if not hasattr(self, 'seq'):
             self._gen_seq(x.shape[0])
         x = self.seq(x)
+        x = torch.reshape(x, [1, 10])
         return F.log_softmax(x, dim=1)
 
 
@@ -43,24 +41,24 @@ class MetaOptimizer(nn.Module):
     def __init__(self):
         super(MetaOptimizer, self).__init__()
 
-    def _gen_fe(self, size: torch.Size):
-        self.fe = GradFeatEx(size, 5)
+    def _gen_fe(self, size: int):
+        self.fe = GradFeatEx(size, 2)
 
     def _gen_seq(self, size: int):
         self.seq = nn.Sequential()
-        self.seq.append(nn.Linear(size, 2048))
+        self.seq.append(nn.Linear(size, 128))
         self.seq.append(nn.ReLU())
-        self.seq.append(nn.Linear(2048, 1024))
+        self.seq.append(nn.Linear(128, 32))
         self.seq.append(nn.ReLU())
 
     def _gen_exit(self, size: int):
-        self.seq = nn.Sequential()
-        self.seq.append(nn.Linear(1024, size))
-        self.seq.append(nn.ReLU())
+        self.exit = nn.Sequential()
+        self.exit.append(nn.Linear(32, size))
+        self.exit.append(nn.ReLU())
 
     def forward(self, grad, x_embd):
         if not hasattr(self, 'fe'):
-            self._gen_fe(grad.shape)
+            self._gen_fe(grad.shape[0])
         grad_embd = self.fe(grad)
 
         x = torch.cat([grad_embd, x_embd])
@@ -70,16 +68,13 @@ class MetaOptimizer(nn.Module):
         x = self.seq(x)
 
         if not hasattr(self, 'exit'):
-            self._gen_exit(self.fe.size)
+            self._gen_exit(grad.shape[0])
+        x = self.exit(x)
 
-        return torch.reshape(x, grad.shape)
+        return x
 
 
 def exp(epochs: int):
-    run = neptune.init_run()
-    torch.manual_seed(1)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     target = Target()
     target.to(device)
 
@@ -97,18 +92,19 @@ def exp(epochs: int):
                               tv.transforms.ToTensor(),
                               tv.transforms.Normalize((0.1307,), (0.3081,))
                           ])),
-        batch_size=32, shuffle=True, **kwargs)
+        batch_size=1, shuffle=True, **kwargs)
     test_loader = DataLoader(
         tv.datasets.MNIST('~/data', train=False,
                           transform=tv.transforms.Compose([
                               tv.transforms.ToTensor(),
                               tv.transforms.Normalize((0.1307,), (0.3081,))
                           ])),
-        batch_size=128, shuffle=False, **kwargs)
+        batch_size=1, shuffle=False, **kwargs)
 
     #Init metaopt parameters
     (X, y) = next(iter(train_loader))
     X, y = X.to(device), y.to(device)
+    metaopt.zero_grad()
     err = loss(target(X), y)
     x_embd = target.fe(X).detach()
     err.backward()

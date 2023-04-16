@@ -1,8 +1,12 @@
+from functools import reduce
+from operator import mul
 import warnings
 
 import learn2learn as l2l
 import numpy as np
 import torch
+
+from gwnmo.utils import log, device
 
 
 class GWNMO(torch.nn.Module):
@@ -28,25 +32,32 @@ class GWNMO(torch.nn.Module):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
 
-            params = model.parameters()
+            params = list(model.parameters())
+                  
+            log.info('Core algo sanity check')
+            log.info(f'Params: {len(params)}')
 
-            def _get_grad(param: torch.nn.Parameter):
-                if hasattr(param, 'grad') and param.grad is not None:
-                    return param.grad.detach()
-                
-            grad: torch.Tensor = np.vectorize(_get_grad)(params)
+            grad_lengths: list[torch.Size] = [ param.grad.detach().shape for param in params if hasattr(param, 'grad') and param.grad is not None ]
+
+            log.info(f'Gradients: {grad_lengths}')
+
+            grad: torch.Tensor = torch.cat([ param.grad.detach().flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ]).to(device)
             grad.requires_grad = False
 
-            updates = -grad*self.transform(grad, x_embd)
+            log.info(f'Gradient: {grad.shape}')
 
-            i = 0
-            for param in params:
-                param.detach_()
-                param.requires_grad = False
-                param.update = updates[i] # type: ignore
-                i += 1
+            updates: torch.Tensor = -grad*self.transform(grad, x_embd)
 
-            l2l.update_module(model)
+            start = 0
+            for i in range(len(params)):
+                params[i].detach_()
+                params[i].requires_grad = False
+                size = grad_lengths[i]
+                f_size = reduce(mul, grad_lengths[i])
+                params[i].update = updates[start:start+f_size].reshape(size) # type: ignore
+                start += f_size
+
+            l2l.update_module(model, updates=None)
 
             for param in model.parameters():
                 param.retain_grad()
@@ -58,4 +69,4 @@ class GWNMO(torch.nn.Module):
             if hasattr(p, 'grad') and p.grad is not None:
                 # Do not reset in-place:
                 # it breaks the computation graph of step().
-                p.grad = torch.zeros_like(p.data)
+                p.grad = torch.zeros_like(p.data).to(device)

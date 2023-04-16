@@ -18,7 +18,7 @@ class SimpleCNN(nn.Module):
             new_channels: int = channels*mul
             self.seq.append(nn.Conv2d(channels, new_channels, 3, 1))
 
-            mul = min(1, int(mul/4))
+            mul = max(1, int(mul/4))
             channels = new_channels
 
     def forward(self, x: torch.Tensor):

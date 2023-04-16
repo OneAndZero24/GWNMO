@@ -1,6 +1,7 @@
 import argparse
 import logging
 
+import neptune
 import torch
 from rich.logging import RichHandler
 
@@ -21,7 +22,6 @@ def _setup_logger(log_level: str):
 
     return logging.getLogger("rich")
 
-
 log = _setup_logger("INFO")
 
 
@@ -30,5 +30,14 @@ def _setup_arg_parser():
     parser.add_argument('epochs', type=int, help='Number of epochs to train for')
     return parser
 
-
 parser = _setup_arg_parser()
+
+
+run = neptune.init_run()
+
+
+def _setup_torch():
+    torch.manual_seed(1)
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+device = _setup_torch()
