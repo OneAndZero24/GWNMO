@@ -74,7 +74,7 @@ class MetaOptimizer(nn.Module):
         return x
 
 
-def exp(epochs: int):
+def exp(epochs: int, mlr:int):
     target = Target()
     target.to(device)
 
@@ -110,7 +110,7 @@ def exp(epochs: int):
     err.backward()
     metaopt.step(x_embd)
 
-    opt = torch.optim.Adam(metaopt.parameters(), lr=0.01)
+    opt = torch.optim.Adam(metaopt.parameters(), lr=mlr)
 
     for epoch in range(epochs):
         log.info(f'Epoch: {epoch}')

@@ -28,6 +28,7 @@ log = _setup_logger("INFO")
 def _setup_arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('epochs', type=int, help='Number of epochs to train for')
+    parser.add_argument('--lr', type=int, default=0.01, required=False, help='Meta optimizer learning rate')
     return parser
 
 parser = _setup_arg_parser()
