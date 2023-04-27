@@ -121,12 +121,12 @@ class MetaOptimizer(nn.Module):
 
         return x
 
-def gwnmo(epochs: int, mlr:int):
+def gwnmo(epochs: int, mlr:float, gm:float):
     target = Target()
     target.to(device)
 
     metaopt = GWNMO(
-        model=target, transform=MetaOptimizer)
+        model=target, transform=MetaOptimizer, gamma=gm)
     metaopt.to(device)
 
     loss = torch.nn.NLLLoss()

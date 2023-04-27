@@ -12,8 +12,9 @@ from gwnmo.utils import log, device
 class GWNMO(torch.nn.Module):
     """Gradient Weighting by Neural Meta Optimizer implementation based on learn2learn LearnableOptimizer"""
 
-    def __init__(self, model, transform):
+    def __init__(self, model, transform, gamma=0.01):
         super(GWNMO, self).__init__()
+        self.gamma = gamma
         assert isinstance(model, torch.nn.Module), \
             'model should inherit from nn.Module.'
 
@@ -46,7 +47,7 @@ class GWNMO(torch.nn.Module):
 
             log.info(f'Gradient: {grad.shape}')
 
-            updates: torch.Tensor = -grad*self.transform(grad, x_embd)
+            updates: torch.Tensor = -self.gamma*grad*torch.clamp(self.transform(grad, x_embd), min=0, max=1)
 
             start = 0
             for i in range(len(params)):
