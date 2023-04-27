@@ -2,8 +2,11 @@
 Based on: https://github.com/learnables/learn2learn/blob/master/examples/optimization/hypergrad_mnist.py
 """
 
+from typing import Callable
+
 import torch
 import torchvision as tv
+import learn2learn as l2l
 from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
@@ -12,6 +15,49 @@ from gwnmo.core import GWNMO
 from gwnmo.models.grad_fe import GradFeatEx
 from gwnmo.models.simple_cnn import SimpleCNN
 from gwnmo.utils import log, accuracy, run, device
+
+
+def _setup_dataset():
+    kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
+    train_loader = DataLoader(
+        tv.datasets.MNIST('~/data', train=True, download=True,
+                          transform=tv.transforms.Compose([
+                              tv.transforms.ToTensor(),
+                              tv.transforms.Normalize((0.1307,), (0.3081,))
+                          ])),
+        batch_size=1, shuffle=True, **kwargs)
+    test_loader = DataLoader(
+        tv.datasets.MNIST('~/data', train=False,
+                          transform=tv.transforms.Compose([
+                              tv.transforms.ToTensor(),
+                              tv.transforms.Normalize((0.1307,), (0.3081,))
+                          ])),
+        batch_size=1, shuffle=False, **kwargs)
+    return (train_loader, test_loader)
+
+def _test(target: nn.Module, test_loader: DataLoader):
+    target.eval()
+    test_accuracy = 0.0
+    with torch.no_grad():
+        for _, (X, y) in enumerate(test_loader):
+            X, y = X.to(device), y.to(device)
+            preds = target(X)
+            test_accuracy += accuracy(preds, y)
+        test_accuracy /= len(test_loader)
+    log.info(f'Accuracy: {test_accuracy}')
+    run["accuracy"].append(test_accuracy)
+
+def _loop(epochs: int, train_loader: DataLoader, test_loader: DataLoader,
+          target: nn.Module, metaopt, 
+          opt: torch.optim.Optimizer, step: Callable):
+    for epoch in range(epochs):
+        log.info(f'Epoch: {epoch}')
+        target.train()
+        for _, (X, y) in enumerate(train_loader):
+            X, y = X.to(device), y.to(device)
+            step(metaopt, opt)(X, y)
+
+        _test(target, test_loader)
 
 
 class Target(nn.Module):
@@ -34,6 +80,8 @@ class Target(nn.Module):
         x = torch.reshape(x, [1, 10])
         return F.log_softmax(x, dim=1)
 
+
+##---GWNMO---##
 
 class MetaOptimizer(nn.Module):
     """Gradient weighting network"""
@@ -73,8 +121,7 @@ class MetaOptimizer(nn.Module):
 
         return x
 
-
-def exp(epochs: int, mlr:int):
+def gwnmo(epochs: int, mlr:int):
     target = Target()
     target.to(device)
 
@@ -84,22 +131,7 @@ def exp(epochs: int, mlr:int):
 
     loss = torch.nn.NLLLoss()
 
-    kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {
-    }
-    train_loader = DataLoader(
-        tv.datasets.MNIST('~/data', train=True, download=True,
-                          transform=tv.transforms.Compose([
-                              tv.transforms.ToTensor(),
-                              tv.transforms.Normalize((0.1307,), (0.3081,))
-                          ])),
-        batch_size=1, shuffle=True, **kwargs)
-    test_loader = DataLoader(
-        tv.datasets.MNIST('~/data', train=False,
-                          transform=tv.transforms.Compose([
-                              tv.transforms.ToTensor(),
-                              tv.transforms.Normalize((0.1307,), (0.3081,))
-                          ])),
-        batch_size=1, shuffle=False, **kwargs)
+    train_loader, test_loader = _setup_dataset()
 
     #Init metaopt parameters
     (X, y) = next(iter(train_loader))
@@ -112,11 +144,8 @@ def exp(epochs: int, mlr:int):
 
     opt = torch.optim.Adam(metaopt.parameters(), lr=mlr)
 
-    for epoch in range(epochs):
-        log.info(f'Epoch: {epoch}')
-        target.train()
-        for _, (X, y) in enumerate(train_loader):
-            X, y = X.to(device), y.to(device)
+    def _step(metaopt, opt: torch.optim.Optimizer):
+        def f(X: torch.Tensor, y: torch.Tensor):
             metaopt.zero_grad()
             opt.zero_grad()
             err = loss(target(X), y)
@@ -125,13 +154,65 @@ def exp(epochs: int, mlr:int):
             opt.step()  # Update metaopt parameters
             metaopt.step(x_embd)  # Update model parameters
 
-        target.eval()
-        test_accuracy = 0.0
-        with torch.no_grad():
-            for _, (X, y) in enumerate(test_loader):
-                X, y = X.to(device), y.to(device)
-                preds = target(X)
-                test_accuracy += accuracy(preds, y)
-            test_accuracy /= len(test_loader)
-        log.info(f'Accuracy: {test_accuracy}')
-        run["accuracy"].append(test_accuracy)
+    _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
+
+
+##---ADAM---###
+
+def adam(epochs: int, lr: int):
+    target = Target()
+    target.to(device)
+
+    opt = torch.optim.Adam(target.parameters(), lr=lr)
+    loss = torch.nn.NLLLoss()
+
+    train_loader, test_loader = _setup_dataset()
+
+    def _step(_, opt: torch.optim.Optimizer):
+        def f(X: torch.Tensor, y: torch.Tensor):
+            opt.zero_grad()
+            err = loss(target(X), y)
+            err.backward()
+            opt.step()
+
+    _loop(epochs, train_loader, test_loader, target, None, opt, _step)
+
+##---HyperGrad---###
+
+class HypergradTransform(torch.nn.Module):
+    """Hypergradient-style per-parameter learning rates"""
+
+    def __init__(self, param, lr=0.01):
+        super(HypergradTransform, self).__init__()
+        self.lr = lr * torch.ones_like(param, requires_grad=True)
+        self.lr = torch.nn.Parameter(self.lr)
+
+    def forward(self, grad):
+        return self.lr * grad
+
+
+def hypergrad(epochs: int, mlr:int):
+    target = Target()
+    target.to(device)
+
+    metaopt = l2l.optim.LearnableOptimizer(
+        model=target, 
+        transform=HypergradTransform
+    )
+    metaopt.to(device)
+
+    opt = torch.optim.Adam(metaopt.parameters(), lr=mlr)
+    loss = torch.nn.NLLLoss()
+
+    train_loader, test_loader = _setup_dataset()
+
+    def _step(metaopt, opt: torch.optim.Optimizer):
+        def f(X: torch.Tensor, y: torch.Tensor):
+            metaopt.zero_grad()
+            opt.zero_grad()
+            err = loss(target(X), y)
+            err.backward()
+            opt.step()
+            metaopt.step()
+
+    _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
