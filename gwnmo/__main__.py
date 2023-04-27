@@ -1,6 +1,10 @@
-from gwnmo.experiments.classic.mnist import gwnmo
+import gwnmo.experiments.classic.mnist as mnist
 from gwnmo.utils import parser
 
 args = parser.parse_args()
-gwnmo(args.epochs, args.lr)
-# TODO flags to select scenario
+if args.exp == 'mnist.gwnmo':
+    mnist.gwnmo(args.epochs, args.lr, args.gamma)
+elif args.exp == 'mnist.adam':
+    mnist.adam(args.epochs, args.lr)
+elif args.exp == 'mnist.hypergrad':
+    mnist.hypergrad(args.epochs, args.lr)
