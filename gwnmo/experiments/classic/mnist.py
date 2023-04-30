@@ -17,7 +17,7 @@ from gwnmo.models.simple_cnn import SimpleCNN
 from gwnmo.utils import log, accuracy, run, device
 
 
-def _setup_dataset():
+def _setup_dataset(batch_size: int=64):
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
     train_loader = DataLoader(
         tv.datasets.MNIST('~/data', train=True, download=True,
@@ -25,14 +25,14 @@ def _setup_dataset():
                               tv.transforms.ToTensor(),
                               tv.transforms.Normalize((0.1307,), (0.3081,))
                           ])),
-        batch_size=1, shuffle=True, **kwargs)
+        batch_size=batch_size, shuffle=True, **kwargs)
     test_loader = DataLoader(
         tv.datasets.MNIST('~/data', train=False,
                           transform=tv.transforms.Compose([
                               tv.transforms.ToTensor(),
                               tv.transforms.Normalize((0.1307,), (0.3081,))
                           ])),
-        batch_size=1, shuffle=False, **kwargs)
+        batch_size=batch_size, shuffle=False, **kwargs)
     return (train_loader, test_loader)
 
 def _test(target: nn.Module, test_loader: DataLoader):
@@ -82,7 +82,6 @@ class Target(nn.Module):
 
 
 ##---GWNMO---##
-
 class MetaOptimizer(nn.Module):
     """Gradient weighting network"""
 
@@ -104,12 +103,12 @@ class MetaOptimizer(nn.Module):
         self.exit.append(nn.Linear(32, size))
         self.exit.append(nn.ReLU())
 
-    def forward(self, grad, x_embd):
+    def forward(self, params, grad, x_embd):
         if not hasattr(self, 'fe'):
             self._gen_fe(grad.shape[0])
         grad_embd = self.fe(grad)
 
-        x = torch.cat([grad_embd, x_embd])
+        x = torch.cat([params, grad_embd, x_embd])
 
         if not hasattr(self, 'seq'):
             self._gen_seq(x.shape[0])
@@ -151,8 +150,8 @@ def gwnmo(epochs: int, mlr:float, gm:float):
             err = loss(target(X), y)
             x_embd = target.fe(X).detach()
             err.backward()
-            opt.step()  # Update metaopt parameters
             metaopt.step(x_embd)  # Update model parameters
+            opt.step()  # Update metaopt parameters
 
     _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
 
@@ -212,7 +211,7 @@ def hypergrad(epochs: int, mlr:int):
             opt.zero_grad()
             err = loss(target(X), y)
             err.backward()
-            opt.step()
             metaopt.step()
+            opt.step()
 
     _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
