@@ -13,26 +13,20 @@ from torch.utils.data import DataLoader
 
 from gwnmo.core import GWNMO
 from gwnmo.models.grad_fe import GradFeatEx
-from gwnmo.models.simple_cnn import SimpleCNN
 from gwnmo.utils import log, accuracy, run, device
 
 
 def _setup_dataset(batch_size: int=64):
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
+    transforms = tv.models.ResNet18_Weights.DEFAULT.transforms()
     train_loader = DataLoader(
-        tv.datasets.MNIST('~/data', train=True, download=True,
-                          transform=tv.transforms.Compose([
-                              tv.transforms.ToTensor(),
-                              tv.transforms.Normalize((0.1307,), (0.3081,))
-                          ])),
-        batch_size=batch_size, shuffle=True, **kwargs)
+        tv.datasets.MNIST('~/data', train=True, download=True, transform=transforms),
+        batch_size=batch_size, shuffle=True, **kwargs
+    )
     test_loader = DataLoader(
-        tv.datasets.MNIST('~/data', train=False,
-                          transform=tv.transforms.Compose([
-                              tv.transforms.ToTensor(),
-                              tv.transforms.Normalize((0.1307,), (0.3081,))
-                          ])),
-        batch_size=batch_size, shuffle=False, **kwargs)
+        tv.datasets.MNIST('~/data', train=False, transform=transforms),
+        batch_size=batch_size, shuffle=False, **kwargs
+    )
     return (train_loader, test_loader)
 
 def _test(target: nn.Module, test_loader: DataLoader):
@@ -65,17 +59,18 @@ class Target(nn.Module):
 
     def __init__(self):
         super(Target, self).__init__()
-        self.fe = SimpleCNN(1, 2)
 
-    def _gen_seq(self, size: int):
+        resnet18 = tv.models.resnet18(weights=tv.models.ResNet18_Weights.DEFAULT)
+        modules = list(resnet18.children())[:-1]
+        self.fe = nn.Sequential(*modules)
+        for param in self.fe.parameters():
+            param.requires_grad = False
+
         self.seq = nn.Sequential()
-        self.seq.append(nn.Linear(size, 10))
+        self.seq.append(nn.Linear(512, 10))
 
     def forward(self, x: torch.Tensor):
         x = self.fe(x)
-
-        if not hasattr(self, 'seq'):
-            self._gen_seq(x.shape[0])
         x = self.seq(x)
         x = torch.reshape(x, [1, 10])
         return F.log_softmax(x, dim=1)
@@ -125,7 +120,7 @@ def gwnmo(epochs: int, mlr:float, gm:float):
     target.to(device)
 
     metaopt = GWNMO(
-        model=target, transform=MetaOptimizer, gamma=gm)
+        model=target.seq, transform=MetaOptimizer, gamma=gm)
     metaopt.to(device)
 
     loss = torch.nn.NLLLoss()
@@ -162,7 +157,7 @@ def adam(epochs: int, lr: int):
     target = Target()
     target.to(device)
 
-    opt = torch.optim.Adam(target.parameters(), lr=lr)
+    opt = torch.optim.Adam(target.seq.parameters(), lr=lr)
     loss = torch.nn.NLLLoss()
 
     train_loader, test_loader = _setup_dataset()
@@ -195,7 +190,7 @@ def hypergrad(epochs: int, mlr:int):
     target.to(device)
 
     metaopt = l2l.optim.LearnableOptimizer(
-        model=target, 
+        model=target.seq, 
         transform=HypergradTransform
     )
     metaopt.to(device)
