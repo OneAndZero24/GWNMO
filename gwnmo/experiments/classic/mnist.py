@@ -47,12 +47,13 @@ def _test(target: nn.Module, test_loader: DataLoader):
 def _loop(epochs: int, train_loader: DataLoader, test_loader: DataLoader,
           target: nn.Module, metaopt, 
           opt: torch.optim.Optimizer, step: Callable):
+    f_step = step(metaopt, opt)  
     for epoch in range(epochs):
         log.info(f'Epoch: {epoch}')
         target.train()
         for _, (X, y) in enumerate(train_loader):
             X, y = X.to(device), y.to(device)
-            step(metaopt, opt)(X, y)
+            f_step(X, y)
 
         _test(target, test_loader)
 
