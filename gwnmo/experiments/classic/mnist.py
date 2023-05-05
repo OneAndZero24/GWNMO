@@ -108,7 +108,7 @@ class MetaOptimizer(nn.Module):
             self._gen_fe(grad.shape[0])
         grad_embd = self.fe(grad)
 
-        x = torch.cat([params, grad_embd, x_embd])
+        x = torch.cat([params, grad_embd, x_embd.flatten()])
 
         if not hasattr(self, 'seq'):
             self._gen_seq(x.shape[0])
@@ -152,6 +152,7 @@ def gwnmo(epochs: int, mlr:float, gm:float):
             err.backward()
             metaopt.step(x_embd)  # Update model parameters
             opt.step()  # Update metaopt parameters
+        return f
 
     _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
 
@@ -173,6 +174,7 @@ def adam(epochs: int, lr: int):
             err = loss(target(X), y)
             err.backward()
             opt.step()
+        return f
 
     _loop(epochs, train_loader, test_loader, target, None, opt, _step)
 
@@ -213,5 +215,6 @@ def hypergrad(epochs: int, mlr:int):
             err.backward()
             metaopt.step()
             opt.step()
+        return f
 
     _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
