@@ -15,10 +15,13 @@ from gwnmo.core import GWNMO
 from gwnmo.models.grad_fe import GradFeatEx
 from gwnmo.utils import log, accuracy, run, device
 
-
-def _setup_dataset(batch_size: int=64):
+def _setup_dataset(batch_size: int = 64):
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
-    transforms = tv.models.ResNet18_Weights.DEFAULT.transforms()
+    transforms = tv.transforms.Compose([
+        tv.transforms.ToTensor(),
+        tv.transforms.Lambda(lambda x: x.repeat(3, 1, 1)),
+        tv.models.ResNet18_Weights.DEFAULT.transforms(antialias=True), 
+    ])
     train_loader = DataLoader(
         tv.datasets.MNIST('~/data', train=True, download=True, transform=transforms),
         batch_size=batch_size, shuffle=True, **kwargs
@@ -57,8 +60,9 @@ def _loop(epochs: int, train_loader: DataLoader, test_loader: DataLoader,
 class Target(nn.Module):
     """Target network"""
 
-    def __init__(self):
+    def __init__(self, batch_size: int = 64):
         super(Target, self).__init__()
+        self.batch_size = batch_size
 
         resnet18 = tv.models.resnet18(weights=tv.models.ResNet18_Weights.DEFAULT)
         modules = list(resnet18.children())[:-1]
@@ -71,8 +75,9 @@ class Target(nn.Module):
 
     def forward(self, x: torch.Tensor):
         x = self.fe(x)
+        x = torch.reshape(x, [self.batch_size, 512])
         x = self.seq(x)
-        x = torch.reshape(x, [1, 10])
+        x = torch.reshape(x, [self.batch_size, 10])
         return F.log_softmax(x, dim=1)
 
 

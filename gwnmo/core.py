@@ -47,7 +47,9 @@ class GWNMO(torch.nn.Module):
 
             log.info(f'Gradient: {grad.shape}')
 
-            temp: torch.Tensor = torch.clamp(self.transform(params, grad, x_embd), min=0, max=1)
+            param_vals: torch.Tensor = torch.cat([ param.data.flatten() for param in params ])
+
+            temp: torch.Tensor = torch.clamp(self.transform(param_vals, grad, x_embd), min=0, max=1)
             updates: torch.Tensor = -self.gamma*grad*temp*(torch.linalg.norm(grad)/torch.linalg.norm(temp))
 
             start = 0
