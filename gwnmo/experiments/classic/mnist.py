@@ -11,9 +11,9 @@ from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
-from gwnmo.core import GWNMO
-from gwnmo.models.grad_fe import GradFeatEx
-from gwnmo.utils import log, accuracy, run, device
+from core import GWNMO
+from models.grad_fe import GradFeatEx
+from utils import log, accuracy, run, device
 
 def _setup_dataset(batch_size: int = 64):
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}

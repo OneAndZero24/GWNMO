@@ -6,7 +6,7 @@ import learn2learn as l2l
 import numpy as np
 import torch
 
-from gwnmo.utils import log, device
+from utils import log, device
 
 
 class GWNMO(torch.nn.Module):

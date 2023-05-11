@@ -1,5 +1,5 @@
-import gwnmo.experiments.classic.mnist as mnist
-from gwnmo.utils import parser
+import experiments.classic.mnist as mnist
+from utils import parser
 
 args = parser.parse_args()
 if args.exp == 'mnist.gwnmo':

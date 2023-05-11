@@ -1,0 +1,6 @@
+numpy
+torch
+torchvision
+learn2learn
+rich
+neptune
