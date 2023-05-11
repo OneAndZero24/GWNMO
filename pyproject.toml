@@ -10,11 +10,11 @@ python = "^3.8"
 learn2learn = "^0.1.7"
 torch = "^2.0.0"
 torchvision = "^0.15.1"
-neptune = "^1.1.1"
-logging = "^0.4.9.6"
 rich = "^13.3.3"
 argparse = "^1.4.0"
 mypy = "^1.2.0"
+numpy = "^1.24.3"
+#neptune = "^1.2.0"
 
 [build-system]
 requires = ["poetry-core"]
