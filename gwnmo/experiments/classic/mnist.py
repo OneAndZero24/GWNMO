@@ -126,7 +126,7 @@ def gwnmo(epochs: int, mlr:float, gm:float):
     target.to(device)
 
     metaopt = GWNMO(
-        model=target.seq, transform=MetaOptimizer, gamma=gm)
+        model=target, transform=MetaOptimizer, gamma=gm)
     metaopt.to(device)
 
     loss = torch.nn.NLLLoss()
@@ -164,7 +164,7 @@ def adam(epochs: int, lr: int):
     target = Target()
     target.to(device)
 
-    opt = torch.optim.Adam(target.seq.parameters(), lr=lr)
+    opt = torch.optim.Adam(target.parameters(), lr=lr)
     loss = torch.nn.NLLLoss()
 
     train_loader, test_loader = _setup_dataset()
@@ -198,7 +198,7 @@ def hypergrad(epochs: int, mlr:int):
     target.to(device)
 
     metaopt = l2l.optim.LearnableOptimizer(
-        model=target.seq, 
+        model=target, 
         transform=HypergradTransform
     )
     metaopt.to(device)
