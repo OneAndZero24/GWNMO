@@ -38,7 +38,7 @@ def _test(target: nn.Module, test_loader: DataLoader):
     with torch.no_grad():
         for _, (X, y) in enumerate(test_loader):
             X, y = X.to(device), y.to(device)
-            preds = target(FE(X))
+            preds = target(torch.reshape(FE(X), (-1, 512)))
             test_accuracy += accuracy(preds, y)
         test_accuracy /= len(test_loader)
     log.info(f'Accuracy: {test_accuracy}')
@@ -115,7 +115,7 @@ def gwnmo(epochs: int, mlr:float, gm:float):
         def f(X: torch.Tensor, y: torch.Tensor):
             metaopt.zero_grad()
             opt.zero_grad()
-            x_embd = FE(X)
+            x_embd = torch.reshape(FE(X), (-1, 512))
             err = loss(target(x_embd), y)
             err.backward()
             metaopt.step(x_embd)  # Update model parameters
@@ -139,7 +139,7 @@ def adam(epochs: int, lr: int):
     def _step(_, opt: torch.optim.Optimizer):
         def f(X: torch.Tensor, y: torch.Tensor):
             opt.zero_grad()
-            x_embd = FE(X)
+            x_embd = torch.reshape(FE(X), (-1, 512))
             err = loss(target(x_embd), y)
             err.backward()
             opt.step()
@@ -180,7 +180,7 @@ def hypergrad(epochs: int, mlr:int):
         def f(X: torch.Tensor, y: torch.Tensor):
             metaopt.zero_grad()
             opt.zero_grad()
-            x_embd = FE(X)
+            x_embd = torch.reshape(FE(X), (-1, 512))
             err = loss(target(x_embd), y)
             err.backward()
             metaopt.step()
