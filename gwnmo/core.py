@@ -50,7 +50,8 @@ class GWNMO(torch.nn.Module):
             param_vals: torch.Tensor = torch.cat([ param.data.flatten() for param in params ])
 
             temp: torch.Tensor = torch.clamp(self.transform(param_vals, grad, x_embd), min=0, max=1)
-            updates: torch.Tensor = -self.gamma*grad*temp*(torch.linalg.norm(grad)/torch.linalg.norm(temp))
+            selected: torch.Tensor = temp*grad
+            updates: torch.Tensor = -self.gamma*selected*(torch.linalg.norm(grad)/torch.linalg.norm(selected))
 
             start = 0
             for i in range(len(params)):

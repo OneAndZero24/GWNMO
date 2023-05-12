@@ -15,7 +15,7 @@ from core import GWNMO
 from models.grad_fe import GradFeatEx
 from utils import log, accuracy, run, device
 
-def _setup_dataset(batch_size: int = 64):
+def _setup_dataset(batch_size: int = 32):
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
     transforms = tv.transforms.Compose([
         tv.transforms.ToTensor(),
@@ -58,24 +58,24 @@ def _loop(epochs: int, train_loader: DataLoader, test_loader: DataLoader,
         _test(target, test_loader)
 
 
-class Target(nn.Module):
-    """Target network"""
 
-    def __init__(self, batch_size: int = 64):
+# Pretrained Feature Extractor - Resnet18
+FE = nn.Sequential(*list(tv.models.resnet18(weights=tv.models.ResNet18_Weights.DEFAULT).children())[:-1])
+for param in FE.parameters():
+    param.requires_grad = False
+
+
+class Target(nn.Module):
+    """Target network, takes x after FE"""
+
+    def __init__(self, batch_size: int = 32):
         super(Target, self).__init__()
         self.batch_size = batch_size
-
-        resnet18 = tv.models.resnet18(weights=tv.models.ResNet18_Weights.DEFAULT)
-        modules = list(resnet18.children())[:-1]
-        self.fe = nn.Sequential(*modules)
-        for param in self.fe.parameters():
-            param.requires_grad = False
 
         self.seq = nn.Sequential()
         self.seq.append(nn.Linear(512, 10))
 
     def forward(self, x: torch.Tensor):
-        x = self.fe(x)
         x = torch.reshape(x, [self.batch_size, 512])
         x = self.seq(x)
         x = torch.reshape(x, [self.batch_size, 10])
@@ -137,8 +137,8 @@ def gwnmo(epochs: int, mlr:float, gm:float):
     (X, y) = next(iter(train_loader))
     X, y = X.to(device), y.to(device)
     metaopt.zero_grad()
-    err = loss(target(X), y)
-    x_embd = target.fe(X).detach()
+    x_embd = FE(X)
+    err = loss(target(x_embd), y)
     err.backward()
     metaopt.step(x_embd)
 
@@ -148,8 +148,8 @@ def gwnmo(epochs: int, mlr:float, gm:float):
         def f(X: torch.Tensor, y: torch.Tensor):
             metaopt.zero_grad()
             opt.zero_grad()
-            err = loss(target(X), y)
-            x_embd = target.fe(X).detach()
+            x_embd = FE(X)
+            err = loss(target(x_embd), y)
             err.backward()
             metaopt.step(x_embd)  # Update model parameters
             opt.step()  # Update metaopt parameters
@@ -172,7 +172,8 @@ def adam(epochs: int, lr: int):
     def _step(_, opt: torch.optim.Optimizer):
         def f(X: torch.Tensor, y: torch.Tensor):
             opt.zero_grad()
-            err = loss(target(X), y)
+            x_embd = FE(X)
+            err = loss(target(x_embd), y)
             err.backward()
             opt.step()
         return f
@@ -212,7 +213,8 @@ def hypergrad(epochs: int, mlr:int):
         def f(X: torch.Tensor, y: torch.Tensor):
             metaopt.zero_grad()
             opt.zero_grad()
-            err = loss(target(X), y)
+            x_embd = FE(X)
+            err = loss(target(x_embd), y)
             err.backward()
             metaopt.step()
             opt.step()
