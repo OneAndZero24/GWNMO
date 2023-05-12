@@ -68,17 +68,14 @@ FE.to(device)
 class Target(nn.Module):
     """Target network, takes x after FE"""
 
-    def __init__(self, batch_size: int = 32):
+    def __init__(self):
         super(Target, self).__init__()
-        self.batch_size = batch_size
 
         self.seq = nn.Sequential()
         self.seq.append(nn.Linear(512, 10))
 
     def forward(self, x: torch.Tensor):
-        x = torch.reshape(x, [self.batch_size, 512])
         x = self.seq(x)
-        x = torch.reshape(x, [self.batch_size, 10])
         return F.log_softmax(x, dim=1)
 
 
