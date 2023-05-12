@@ -34,16 +34,21 @@ class GWNMO(torch.nn.Module):
             warnings.simplefilter("ignore")
 
             params = list(model.parameters())
-                  
+
+            for p in params:
+                p.detach_()
+                if hasattr(p, 'grad') and p.grad is not None:
+                    p.grad.detach_()
+                p.data.detach_()
+
             log.info('Core algo sanity check')
             log.info(f'Params: {len(params)}')
 
-            grad_lengths: list[torch.Size] = [ param.grad.detach().shape for param in params if hasattr(param, 'grad') and param.grad is not None ]
+            grad_lengths: list[torch.Size] = [ param.grad.shape for param in params if hasattr(param, 'grad') and param.grad is not None ]
 
             log.info(f'Gradients: {grad_lengths}')
 
-            grad: torch.Tensor = torch.cat([ param.grad.detach().flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ]).to(device)
-            grad.requires_grad = False
+            grad: torch.Tensor = torch.cat([ param.grad.flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ]).to(device)
 
             log.info(f'Gradient: {grad.shape}')
 
@@ -52,6 +57,7 @@ class GWNMO(torch.nn.Module):
             temp: torch.Tensor = torch.clamp(self.transform(param_vals, grad, x_embd), min=0, max=1)
             selected: torch.Tensor = temp*grad
             updates: torch.Tensor = -self.gamma*selected*(torch.linalg.norm(grad)/torch.linalg.norm(selected))
+            updates.detach_()
 
             start = 0
             for i in range(len(params)):
@@ -65,6 +71,7 @@ class GWNMO(torch.nn.Module):
             l2l.update_module(model, updates=None)
 
             for param in model.parameters():
+                param.requires_grad = True
                 param.retain_grad()
 
     def zero_grad(self):

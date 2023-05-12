@@ -38,7 +38,7 @@ def _test(target: nn.Module, test_loader: DataLoader):
     with torch.no_grad():
         for _, (X, y) in enumerate(test_loader):
             X, y = X.to(device), y.to(device)
-            preds = target(X)
+            preds = target(FE(X))
             test_accuracy += accuracy(preds, y)
         test_accuracy /= len(test_loader)
     log.info(f'Accuracy: {test_accuracy}')
@@ -63,7 +63,7 @@ def _loop(epochs: int, train_loader: DataLoader, test_loader: DataLoader,
 FE = nn.Sequential(*list(tv.models.resnet18(weights=tv.models.ResNet18_Weights.DEFAULT).children())[:-1])
 for param in FE.parameters():
     param.requires_grad = False
-
+FE.to(device)
 
 class Target(nn.Module):
     """Target network, takes x after FE"""
@@ -88,38 +88,17 @@ class MetaOptimizer(nn.Module):
 
     def __init__(self):
         super(MetaOptimizer, self).__init__()
-
-    def _gen_fe(self, size: int):
-        self.fe = GradFeatEx(size, 2)
-
-    def _gen_seq(self, size: int):
         self.seq = nn.Sequential()
-        self.seq.append(nn.Linear(size, 128))
+        self.seq.append(nn.Linear(26644, 128))
         self.seq.append(nn.ReLU())
         self.seq.append(nn.Linear(128, 32))
         self.seq.append(nn.ReLU())
-
-    def _gen_exit(self, size: int):
-        self.exit = nn.Sequential()
-        self.exit.append(nn.Linear(32, size))
-        self.exit.append(nn.ReLU())
+        self.seq.append(nn.Linear(32, 5130))
+        self.seq.append(nn.ReLU())
 
     def forward(self, params, grad, x_embd):
-        if not hasattr(self, 'fe'):
-            self._gen_fe(grad.shape[0])
-        grad_embd = self.fe(grad)
-
-        x = torch.cat([params, grad_embd, x_embd.flatten()])
-
-        if not hasattr(self, 'seq'):
-            self._gen_seq(x.shape[0])
-        x = self.seq(x)
-
-        if not hasattr(self, 'exit'):
-            self._gen_exit(grad.shape[0])
-        x = self.exit(x)
-
-        return x
+        x = torch.cat([params, grad, x_embd.flatten()])
+        return self.seq(x)
 
 def gwnmo(epochs: int, mlr:float, gm:float):
     target = Target()
@@ -132,15 +111,6 @@ def gwnmo(epochs: int, mlr:float, gm:float):
     loss = torch.nn.NLLLoss()
 
     train_loader, test_loader = _setup_dataset()
-
-    #Init metaopt parameters
-    (X, y) = next(iter(train_loader))
-    X, y = X.to(device), y.to(device)
-    metaopt.zero_grad()
-    x_embd = FE(X)
-    err = loss(target(x_embd), y)
-    err.backward()
-    metaopt.step(x_embd)
 
     opt = torch.optim.Adam(metaopt.parameters(), lr=mlr)
 
