@@ -41,16 +41,16 @@ class GWNMO(torch.nn.Module):
                     p.grad.detach_()
                 p.data.detach_()
 
-            log.info('Core algo sanity check')
-            log.info(f'Params: {len(params)}')
+            log.debug('Core algo sanity check')
+            log.debug(f'Params: {len(params)}')
 
             grad_lengths: list[torch.Size] = [ param.grad.shape for param in params if hasattr(param, 'grad') and param.grad is not None ]
 
-            log.info(f'Gradients: {grad_lengths}')
+            log.debug(f'Gradients: {grad_lengths}')
 
             grad: torch.Tensor = torch.cat([ param.grad.flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ]).to(device)
 
-            log.info(f'Gradient: {grad.shape}')
+            log.debug(f'Gradient: {grad.shape}')
 
             param_vals: torch.Tensor = torch.cat([ param.data.flatten() for param in params ])
 

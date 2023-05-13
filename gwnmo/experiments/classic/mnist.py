@@ -34,15 +34,21 @@ def _setup_dataset(batch_size: int = 32):
 
 def _test(target: nn.Module, test_loader: DataLoader):
     target.eval()
+    loss = torch.nn.NLLLoss()
+    test_error = 0.0
     test_accuracy = 0.0
     with torch.no_grad():
         for _, (X, y) in enumerate(test_loader):
             X, y = X.to(device), y.to(device)
             preds = target(torch.reshape(FE(X), (-1, 512)))
+            test_error += loss(preds, y)
             test_accuracy += accuracy(preds, y)
+        test_error /= len(test_loader)
         test_accuracy /= len(test_loader)
-    log.info(f'Accuracy: {test_accuracy}')
+    log.info(f'Test Accuracy: {test_accuracy}')
+    log.info(f'Test Loss: {test_error}')
     run["accuracy"].append(test_accuracy)
+    run["loss"].append(test_error)
 
 def _loop(epochs: int, train_loader: DataLoader, test_loader: DataLoader,
           target: nn.Module, metaopt, 
@@ -98,6 +104,7 @@ class MetaOptimizer(nn.Module):
         return self.seq(x)
 
 def gwnmo(epochs: int, mlr:float, gm:float):
+    run["sys/tags"].add(['gwnmo', f'lr={mlr}', f'gm={gm}'])
     target = Target()
     target.to(device)
 
@@ -128,6 +135,7 @@ def gwnmo(epochs: int, mlr:float, gm:float):
 ##---ADAM---###
 
 def adam(epochs: int, lr: int):
+    run["sys/tags"].add(['adam', f'lr={lr}'])
     target = Target()
     target.to(device)
 
@@ -162,6 +170,7 @@ class HypergradTransform(torch.nn.Module):
 
 
 def hypergrad(epochs: int, mlr:int):
+    run["sys/tags"].add(['hypergrad', f'lr={mlr}'])
     target = Target()
     target.to(device)
 
