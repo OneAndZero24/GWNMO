@@ -36,7 +36,6 @@ class GWNMO(torch.nn.Module):
             params = list(model.parameters())
 
             for p in params:
-                p.detach_()
                 if hasattr(p, 'grad') and p.grad is not None:
                     p.grad.detach_()
                 p.data.detach_()
@@ -49,10 +48,12 @@ class GWNMO(torch.nn.Module):
             log.debug(f'Gradients: {grad_lengths}')
 
             grad: torch.Tensor = torch.cat([ param.grad.flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ]).to(device)
+            grad.requires_grad = False
 
             log.debug(f'Gradient: {grad.shape}')
 
             param_vals: torch.Tensor = torch.cat([ param.data.flatten() for param in params ])
+            param_vals.requires_grad = False
 
             temp: torch.Tensor = torch.clamp(self.transform(param_vals, grad, x_embd), min=0, max=1)
             selected: torch.Tensor = temp*grad

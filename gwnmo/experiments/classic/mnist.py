@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 
 from core import GWNMO
 from models.grad_fe import GradFeatEx
-from utils import log, accuracy, run, device
+from utils import log, accuracy, device, run
 
 def _setup_dataset(batch_size: int = 32):
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
@@ -125,8 +125,8 @@ def gwnmo(epochs: int, mlr:float, gm:float):
             x_embd = torch.reshape(FE(X), (-1, 512))
             err = loss(target(x_embd), y)
             err.backward()
-            metaopt.step(x_embd)  # Update model parameters
             opt.step()  # Update metaopt parameters
+            metaopt.step(x_embd)  # Update model parameters
         return f
 
     _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
@@ -169,14 +169,15 @@ class HypergradTransform(torch.nn.Module):
         return self.lr * grad
 
 
-def hypergrad(epochs: int, mlr:int):
+def hypergrad(epochs: int, mlr:int, gm:float):
     run["sys/tags"].add(['hypergrad', f'lr={mlr}'])
     target = Target()
     target.to(device)
 
     metaopt = l2l.optim.LearnableOptimizer(
         model=target, 
-        transform=HypergradTransform
+        transform=HypergradTransform,
+        lr = gm
     )
     metaopt.to(device)
 
@@ -192,8 +193,8 @@ def hypergrad(epochs: int, mlr:int):
             x_embd = torch.reshape(FE(X), (-1, 512))
             err = loss(target(x_embd), y)
             err.backward()
-            metaopt.step()
             opt.step()
+            metaopt.step()
         return f
 
     _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)

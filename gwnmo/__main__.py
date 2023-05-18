@@ -7,4 +7,4 @@ if args.exp == 'mnist.gwnmo':
 elif args.exp == 'mnist.adam':
     mnist.adam(args.epochs, args.lr)
 elif args.exp == 'mnist.hypergrad':
-    mnist.hypergrad(args.epochs, args.lr)
+    mnist.hypergrad(args.epochs, args.lr, args.gamma)
