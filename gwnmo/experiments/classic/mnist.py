@@ -23,11 +23,11 @@ def _setup_dataset(batch_size: int = 32):
         tv.models.ResNet18_Weights.DEFAULT.transforms(antialias=True), 
     ])
     train_loader = DataLoader(
-        tv.datasets.MNIST('~/data', train=True, download=True, transform=transforms),
+        tv.datasets.MNIST('/shared/sets/datasets', train=True, download=True, transform=transforms),
         batch_size=batch_size, shuffle=True, **kwargs
     )
     test_loader = DataLoader(
-        tv.datasets.MNIST('~/data', train=False, transform=transforms),
+        tv.datasets.MNIST('/shared/sets/datasets', train=False, transform=transforms),
         batch_size=batch_size, shuffle=False, **kwargs
     )
     return (train_loader, test_loader)
