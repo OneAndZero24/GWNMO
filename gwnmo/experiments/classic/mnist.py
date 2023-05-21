@@ -170,7 +170,7 @@ class HypergradTransform(torch.nn.Module):
 
 
 def hypergrad(epochs: int, mlr:int, gm:float):
-    run["sys/tags"].add(['hypergrad', f'lr={mlr}'])
+    run["sys/tags"].add(['hypergrad', f'lr={mlr}', f'gm={gm}'])
     target = Target()
     target.to(device)
 
