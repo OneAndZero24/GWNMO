@@ -63,6 +63,24 @@ def _loop(epochs: int, train_loader: DataLoader, test_loader: DataLoader,
 
         _test(target, test_loader)
 
+def _twostep_loop(epochs: int, train_loader: DataLoader, test_loader: DataLoader,
+          target: nn.Module, metaopt, 
+          opt: torch.optim.Optimizer, step: Callable):
+    f_step = step(metaopt, opt)  
+    for epoch in range(epochs):
+        log.info(f'Epoch: {epoch}')
+        target.train()
+        enum = enumerate(train_loader)
+        _, (lastX, lasty) = next(enum)
+        lastX.to(device)
+        lasty.to(device)
+        for _, (X, y) in enum:
+            X, y = X.to(device), y.to(device)
+            f_step(lastX, lasty, X, y)
+            lastX = X
+            lasty = y
+
+        _test(target, test_loader)
 
 
 # Pretrained Feature Extractor - Resnet18
@@ -104,7 +122,7 @@ class MetaOptimizer(nn.Module):
         return self.seq(x)
 
 def gwnmo(epochs: int, mlr:float, gm:float, reps: int = 1):
-    run["sys/tags"].add(['gwnmo', f'lr={mlr}', f'gm={gm}'])
+    run["sys/tags"].add(['gwnmo', f'lr={mlr}', f'gm={gm}', f'reps={reps}'])
     transform = None
 
     for I in range(reps):
@@ -141,7 +159,7 @@ def gwnmo(epochs: int, mlr:float, gm:float, reps: int = 1):
 ##---ADAM---###
 
 def adam(epochs: int, lr: int, reps: int = 1):
-    run["sys/tags"].add(['adam', f'lr={lr}'])
+    run["sys/tags"].add(['adam', f'lr={lr}', f'reps={reps}'])
     state = None
 
     for I in range(reps):
@@ -183,7 +201,7 @@ class HypergradTransform(torch.nn.Module):
 
 
 def hypergrad(epochs: int, mlr:int, gm:float, reps: int = 1):
-    run["sys/tags"].add(['hypergrad', f'lr={mlr}', f'gm={gm}'])
+    run["sys/tags"].add(['hypergrad', f'lr={mlr}', f'gm={gm}', f'reps={reps}'])
     transforms = None
 
     for I in range(reps):
