@@ -121,7 +121,7 @@ class MetaOptimizer(nn.Module):
         x = torch.cat([params, grad, x_embd.flatten()])
         return self.seq(x)
 
-def gwnmo(epochs: int, mlr:float, gm:float, reps: int = 1):
+def gwnmo(epochs: int, mlr:float, gm:float, reps: int = 1, twostep: bool = False):
     run["sys/tags"].add(['gwnmo', f'lr={mlr}', f'gm={gm}', f'reps={reps}'])
     transform = None
 
@@ -141,18 +141,36 @@ def gwnmo(epochs: int, mlr:float, gm:float, reps: int = 1):
 
         opt = torch.optim.Adam(metaopt.parameters(), lr=mlr)
 
-        def _step(metaopt, opt: torch.optim.Optimizer):
-            def f(X: torch.Tensor, y: torch.Tensor):
-                metaopt.zero_grad()
-                opt.zero_grad()
-                x_embd = torch.reshape(FE(X), (-1, 512))
-                err = loss(target(x_embd), y)
-                err.backward()
-                opt.step()  # Update metaopt parameters
-                metaopt.step(x_embd)  # Update model parameters
-            return f
+        if twostep:
+            def _twostep_step(metaopt, opt: torch.optim.Optimizer):
+                def f(lastX: torch.Tensor, lasty: torch.Tensor, X: torch.Tensor, y: torch.Tensor):
+                    metaopt.zero_grad()
+                    x_embd = torch.reshape(FE(lastX), (-1, 512))
+                    err = loss(target(x_embd), lasty)
+                    err.backward()
+                    metaopt.step(x_embd)  # Update model parameters
 
-        _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
+                    opt.zero_grad()
+                    x_embd = torch.reshape(FE(X), (-1, 512))
+                    err = loss(target(x_embd), y)
+                    err.backward()
+                    opt.step()  # Update metaopt parameters
+                return f
+
+            _twostep_loop(epochs, train_loader, test_loader, target, metaopt, opt, _twostep_step)
+        else:
+            def _step(metaopt, opt: torch.optim.Optimizer):
+                def f(X: torch.Tensor, y: torch.Tensor):
+                    metaopt.zero_grad()
+                    opt.zero_grad()
+                    x_embd = torch.reshape(FE(X), (-1, 512))
+                    err = loss(target(x_embd), y)
+                    err.backward()
+                    opt.step()  # Update metaopt parameters
+                    metaopt.step(x_embd)  # Update model parameters
+                return f
+
+            _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
         transform = metaopt.transform
 
 
@@ -200,7 +218,7 @@ class HypergradTransform(torch.nn.Module):
         return self.lr * grad
 
 
-def hypergrad(epochs: int, mlr:int, gm:float, reps: int = 1):
+def hypergrad(epochs: int, mlr:int, gm:float, reps: int = 1, twostep: bool = False):
     run["sys/tags"].add(['hypergrad', f'lr={mlr}', f'gm={gm}', f'reps={reps}'])
     transforms = None
 
@@ -222,16 +240,34 @@ def hypergrad(epochs: int, mlr:int, gm:float, reps: int = 1):
 
         train_loader, test_loader = _setup_dataset()
 
-        def _step(metaopt, opt: torch.optim.Optimizer):
-            def f(X: torch.Tensor, y: torch.Tensor):
-                metaopt.zero_grad()
-                opt.zero_grad()
-                x_embd = torch.reshape(FE(X), (-1, 512))
-                err = loss(target(x_embd), y)
-                err.backward()
-                opt.step()
-                metaopt.step()
-            return f
+        if twostep:
+            def _twostep_step(metaopt, opt: torch.optim.Optimizer):
+                def f(lastX: torch.Tensor, lasty: torch.Tensor, X: torch.Tensor, y: torch.Tensor):
+                    metaopt.zero_grad()
+                    x_embd = torch.reshape(FE(lastX), (-1, 512))
+                    err = loss(target(x_embd), lasty)
+                    err.backward()
+                    metaopt.step(x_embd)  # Update model parameters
 
-        _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
+                    opt.zero_grad()
+                    x_embd = torch.reshape(FE(X), (-1, 512))
+                    err = loss(target(x_embd), y)
+                    err.backward()
+                    opt.step()  # Update metaopt parameters
+                return f
+
+            _twostep_loop(epochs, train_loader, test_loader, target, metaopt, opt, _twostep_step)
+        else:
+            def _step(metaopt, opt: torch.optim.Optimizer):
+                def f(X: torch.Tensor, y: torch.Tensor):
+                    metaopt.zero_grad()
+                    opt.zero_grad()
+                    x_embd = torch.reshape(FE(X), (-1, 512))
+                    err = loss(target(x_embd), y)
+                    err.backward()
+                    opt.step()  # Update metaopt parameters
+                    metaopt.step()   # Update model parameters
+                return f
+
+            _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
         transforms = metaopt.transforms
