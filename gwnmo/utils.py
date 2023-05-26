@@ -30,7 +30,8 @@ def _setup_arg_parser():
     parser.add_argument('epochs', type=int, help='Number of epochs to train for')
     parser.add_argument("--exp", choices=['mnist.gwnmo', 'mnist.adam', 'mnist.hypergrad'], required=True, default="M", help='Experiment selection')
     parser.add_argument('--lr', type=float, default=0.01, required=False, help='Meta optimizer learning rate')
-    parser.add_argument("--gamma", type=float, default=0.01, required=False, help='Gamma for mnist.gwnmo')
+    parser.add_argument("--gamma", type=float, default=0.01, required=False, help='Gamma for metopts')
+    parser.add_argument('--reps', type=int, default=1, required=False, help='External loop')
     return parser
 
 parser = _setup_arg_parser()

@@ -3,8 +3,8 @@ from utils import parser
 
 args = parser.parse_args()
 if args.exp == 'mnist.gwnmo':
-    mnist.gwnmo(args.epochs, args.lr, args.gamma)
+    mnist.gwnmo(args.epochs, args.lr, args.gamma, args.reps)
 elif args.exp == 'mnist.adam':
-    mnist.adam(args.epochs, args.lr)
+    mnist.adam(args.epochs, args.lr, args.reps)
 elif args.exp == 'mnist.hypergrad':
-    mnist.hypergrad(args.epochs, args.lr, args.gamma)
+    mnist.hypergrad(args.epochs, args.lr, args.gamma, args.reps)

@@ -103,57 +103,70 @@ class MetaOptimizer(nn.Module):
         x = torch.cat([params, grad, x_embd.flatten()])
         return self.seq(x)
 
-def gwnmo(epochs: int, mlr:float, gm:float):
+def gwnmo(epochs: int, mlr:float, gm:float, reps: int = 1):
     run["sys/tags"].add(['gwnmo', f'lr={mlr}', f'gm={gm}'])
-    target = Target()
-    target.to(device)
+    transform = None
 
-    metaopt = GWNMO(
-        model=target, transform=MetaOptimizer, gamma=gm)
-    metaopt.to(device)
+    for I in range(reps):
+        target = Target()
+        target.to(device)
 
-    loss = torch.nn.NLLLoss()
+        metaopt = GWNMO(
+            model=target, transform=MetaOptimizer, gamma=gm)
+        if transform is not None:
+            metaopt.transform = transform
+        metaopt.to(device)
 
-    train_loader, test_loader = _setup_dataset()
+        loss = torch.nn.NLLLoss()
 
-    opt = torch.optim.Adam(metaopt.parameters(), lr=mlr)
+        train_loader, test_loader = _setup_dataset()
 
-    def _step(metaopt, opt: torch.optim.Optimizer):
-        def f(X: torch.Tensor, y: torch.Tensor):
-            metaopt.zero_grad()
-            opt.zero_grad()
-            x_embd = torch.reshape(FE(X), (-1, 512))
-            err = loss(target(x_embd), y)
-            err.backward()
-            opt.step()  # Update metaopt parameters
-            metaopt.step(x_embd)  # Update model parameters
-        return f
+        opt = torch.optim.Adam(metaopt.parameters(), lr=mlr)
 
-    _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
+        def _step(metaopt, opt: torch.optim.Optimizer):
+            def f(X: torch.Tensor, y: torch.Tensor):
+                metaopt.zero_grad()
+                opt.zero_grad()
+                x_embd = torch.reshape(FE(X), (-1, 512))
+                err = loss(target(x_embd), y)
+                err.backward()
+                opt.step()  # Update metaopt parameters
+                metaopt.step(x_embd)  # Update model parameters
+            return f
+
+        _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
+        transform = metaopt.transform
 
 
 ##---ADAM---###
 
-def adam(epochs: int, lr: int):
+def adam(epochs: int, lr: int, reps: int = 1):
     run["sys/tags"].add(['adam', f'lr={lr}'])
-    target = Target()
-    target.to(device)
+    state = None
 
-    opt = torch.optim.Adam(target.parameters(), lr=lr)
-    loss = torch.nn.NLLLoss()
+    for I in range(reps):
+        target = Target()
+        target.to(device)
 
-    train_loader, test_loader = _setup_dataset()
+        opt = torch.optim.Adam(target.parameters(), lr=lr)
+        if state is not None:
+            opt.load_state_dict(state)
 
-    def _step(_, opt: torch.optim.Optimizer):
-        def f(X: torch.Tensor, y: torch.Tensor):
-            opt.zero_grad()
-            x_embd = torch.reshape(FE(X), (-1, 512))
-            err = loss(target(x_embd), y)
-            err.backward()
-            opt.step()
-        return f
+        loss = torch.nn.NLLLoss()
 
-    _loop(epochs, train_loader, test_loader, target, None, opt, _step)
+        train_loader, test_loader = _setup_dataset()
+
+        def _step(_, opt: torch.optim.Optimizer):
+            def f(X: torch.Tensor, y: torch.Tensor):
+                opt.zero_grad()
+                x_embd = torch.reshape(FE(X), (-1, 512))
+                err = loss(target(x_embd), y)
+                err.backward()
+                opt.step()
+            return f
+
+        _loop(epochs, train_loader, test_loader, target, None, opt, _step)
+        state = opt.state_dict()
 
 ##---HyperGrad---###
 
@@ -169,32 +182,38 @@ class HypergradTransform(torch.nn.Module):
         return self.lr * grad
 
 
-def hypergrad(epochs: int, mlr:int, gm:float):
+def hypergrad(epochs: int, mlr:int, gm:float, reps: int = 1):
     run["sys/tags"].add(['hypergrad', f'lr={mlr}', f'gm={gm}'])
-    target = Target()
-    target.to(device)
+    transforms = None
 
-    metaopt = l2l.optim.LearnableOptimizer(
-        model=target, 
-        transform=HypergradTransform,
-        lr = gm
-    )
-    metaopt.to(device)
+    for I in range(reps):
+        target = Target()
+        target.to(device)
 
-    opt = torch.optim.Adam(metaopt.parameters(), lr=mlr)
-    loss = torch.nn.NLLLoss()
+        metaopt = l2l.optim.LearnableOptimizer(
+            model=target, 
+            transform=HypergradTransform,
+            lr = gm
+        )
+        if transforms is not None:
+            metaopt.transforms = transforms
+        metaopt.to(device)
 
-    train_loader, test_loader = _setup_dataset()
+        opt = torch.optim.Adam(metaopt.parameters(), lr=mlr)
+        loss = torch.nn.NLLLoss()
 
-    def _step(metaopt, opt: torch.optim.Optimizer):
-        def f(X: torch.Tensor, y: torch.Tensor):
-            metaopt.zero_grad()
-            opt.zero_grad()
-            x_embd = torch.reshape(FE(X), (-1, 512))
-            err = loss(target(x_embd), y)
-            err.backward()
-            opt.step()
-            metaopt.step()
-        return f
+        train_loader, test_loader = _setup_dataset()
 
-    _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
+        def _step(metaopt, opt: torch.optim.Optimizer):
+            def f(X: torch.Tensor, y: torch.Tensor):
+                metaopt.zero_grad()
+                opt.zero_grad()
+                x_embd = torch.reshape(FE(X), (-1, 512))
+                err = loss(target(x_embd), y)
+                err.backward()
+                opt.step()
+                metaopt.step()
+            return f
+
+        _loop(epochs, train_loader, test_loader, target, metaopt, opt, _step)
+        transforms = metaopt.transforms
