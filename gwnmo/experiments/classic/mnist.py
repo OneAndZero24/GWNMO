@@ -72,9 +72,8 @@ def _twostep_loop(epochs: int, train_loader: DataLoader, test_loader: DataLoader
         target.train()
         enum = enumerate(train_loader)
         _, (lastX, lasty) = next(enum)
-        lastX.to(device)
-        lasty.to(device)
         for _, (X, y) in enum:
+            lastX, lasty = lastX.to(device), lasty.to(device)
             X, y = X.to(device), y.to(device)
             f_step(lastX, lasty, X, y)
             lastX = X
