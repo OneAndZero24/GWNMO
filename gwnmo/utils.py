@@ -33,6 +33,7 @@ def _setup_arg_parser():
     parser.add_argument("--gamma", type=float, default=0.01, required=False, help='Gamma for metopts')
     parser.add_argument('--reps', type=int, default=1, required=False, help='External loop')
     parser.add_argument('--twostep', action='store_true', help='Optional learning method for HG methods')
+    parser.add_argument('--normalize', action='store_false', help='Normalization in GWNMO (default true)')
     return parser
 
 parser = _setup_arg_parser()

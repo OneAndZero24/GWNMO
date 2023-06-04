@@ -12,7 +12,6 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 
 from core import GWNMO
-from models.grad_fe import GradFeatEx
 from utils import log, accuracy, device, run
 
 def _setup_dataset(batch_size: int = 32):
@@ -120,7 +119,7 @@ class MetaOptimizer(nn.Module):
         x = torch.cat([params, grad, x_embd.flatten()])
         return self.seq(x)
 
-def gwnmo(epochs: int, mlr:float, gm:float, reps: int = 1, twostep: bool = False):
+def gwnmo(epochs: int, mlr:float, gm:float, reps: int = 1, twostep: bool = False, normalize: bool = True):
     run["sys/tags"].add(['gwnmo', f'lr={mlr}', f'gm={gm}', f'reps={reps}'])
     transform = None
 
@@ -129,7 +128,7 @@ def gwnmo(epochs: int, mlr:float, gm:float, reps: int = 1, twostep: bool = False
         target.to(device)
 
         metaopt = GWNMO(
-            model=target, transform=MetaOptimizer, gamma=gm)
+            model=target, transform=MetaOptimizer, gamma=gm, normalize=normalize)
         if transform is not None:
             metaopt.transform = transform
         metaopt.to(device)

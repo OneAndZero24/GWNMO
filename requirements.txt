@@ -4,3 +4,4 @@ torchvision==0.15.2
 learn2learn==0.1.7
 rich==13.3.5
 neptune==1.2.0
+pytorch-lightning==2.0.2
