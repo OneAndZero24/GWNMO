@@ -1,2 +1,1 @@
-import pkg_resources
-__version__ = pkg_resources.get_distribution('gwnmo').version
+__version__ = "2.1.0"
