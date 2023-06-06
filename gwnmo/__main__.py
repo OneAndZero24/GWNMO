@@ -1,10 +1,30 @@
-import experiments.classic.mnist as mnist
-from utils import parser
+from utils import parser, map2cmd, logger, setup_logger
+
+from modules.adam import Adam
+from modules.gwnmo import GWNMO
+from modules.hypergrad import HyperGrad
+from train import train, train_twostep
+
 
 args = parser.parse_args()
-if args.exp == 'mnist.gwnmo':
-    mnist.gwnmo(args.epochs, args.lr, args.gamma, args.reps, args.twostep, args.normalize)
-elif args.exp == 'mnist.adam':
-    mnist.adam(args.epochs, args.lr, args.reps)
-elif args.exp == 'mnist.hypergrad':
-    mnist.hypergrad(args.epochs, args.lr, args.gamma, args.reps, args.twostep)
+
+logger = setup_logger(args)
+
+dataset = map2cmd['dataset'][args.dataset]()
+Module = map2cmd['module'][args.module]
+
+global module
+if Module == GWNMO:
+    module = Module(args.lr, args.gamma, args.normalize)
+
+if Module == HyperGrad:
+    module = Module(args.lr, args.gamma)
+else:
+    module = Module(args.lr)
+
+if args.twostep:
+    train_twostep(dataset, args.epochs, args.reps, module)
+else:
+   train(dataset, args.epochs, args.reps, module)
+
+logger.log_model_summary(model=module, max_depth=-1)

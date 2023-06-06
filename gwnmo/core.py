@@ -3,14 +3,15 @@ from operator import mul
 import warnings
 
 import learn2learn as l2l
-import numpy as np
 import torch
 
-from utils import log, device
+from utils import device
 
 
 class GWNMO(torch.nn.Module):
-    """Gradient Weighting by Neural Meta Optimizer implementation based on learn2learn LearnableOptimizer"""
+    """
+    Gradient Weighting by Neural Meta Optimizer implementation based on learn2learn LearnableOptimizer
+    """
 
     def __init__(self, model, transform, gamma=0.01, normalize=True):
         super(GWNMO, self).__init__()
@@ -41,17 +42,10 @@ class GWNMO(torch.nn.Module):
                     p.grad.detach_()
                 p.data.detach_()
 
-            log.debug('Core algo sanity check')
-            log.debug(f'Params: {len(params)}')
-
             grad_lengths: list[torch.Size] = [ param.grad.shape for param in params if hasattr(param, 'grad') and param.grad is not None ]
-
-            log.debug(f'Gradients: {grad_lengths}')
-
+            
             grad: torch.Tensor = torch.cat([ param.grad.flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ]).to(device)
             grad.requires_grad = False
-
-            log.debug(f'Gradient: {grad.shape}')
 
             param_vals: torch.Tensor = torch.cat([ param.data.flatten() for param in params ])
             param_vals.requires_grad = False
@@ -59,6 +53,7 @@ class GWNMO(torch.nn.Module):
             h: torch.Tensor = self.transform(param_vals, grad, x_embd)
             temp : torch.Tensor = torch.clamp(h, min=0, max= 1)
             selected: torch.Tensor = temp*grad
+
             updates: torch.Tensor
             if self.normalize:
                 updates = -self.gamma*selected*(torch.linalg.norm(grad)/torch.linalg.norm(selected))
