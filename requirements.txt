@@ -3,4 +3,4 @@ torch==2.0.1
 torchvision==0.15.2
 learn2learn==0.1.7
 neptune-client==1.2.0
-pytorch-lightning==2.0.2
+lightning==2.0.2

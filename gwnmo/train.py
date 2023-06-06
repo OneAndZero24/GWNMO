@@ -2,12 +2,24 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-import pytorch_lightning as pl
+import lightning as L
 
 from modules.module_abc import ModuleABC
-from utils import logger, device, accuracy
+from utils import logger, accuracy
 
-def test(module: ModuleABC, test_loader: DataLoader):
+def _setup_fabric():
+    """
+    Sets-up & returns lightning fabric
+    """
+
+    fabric = L.Fabric(loggers=logger)
+    fabric.launch()
+    return fabric
+
+fabric = _setup_fabric()
+
+
+def test(module: ModuleABC, test_loader):
     """
     Test target on whole test
     """
@@ -19,7 +31,6 @@ def test(module: ModuleABC, test_loader: DataLoader):
 
     with torch.no_grad():
         for i, (X, y) in enumerate(test_loader):
-            X, y = X.to(device), y.to(device)
             _, preds, err = module.training_step(X, y, i)
             test_error += err
             test_accuracy += accuracy(preds, y)
@@ -39,34 +50,43 @@ def train(dataset, epochs: int, reps: int, module: ModuleABC):
     """
 
     train_loader, test_loader = dataset
+    train_loader = fabric.setup_dataloaders(train_loader)
+    test_loader = fabric.setup_dataloaders(test_loader)
 
     state = None
     for _ in range(reps):
         opts = module.configure_optimizers()
 
-        module.reset_target()
-        module.target.to(device)
+        opt = opts[0]
+        metaopt = None
+        if len(opts) > 1:
+            metaopt = opts[1]
 
         if state is not None:
             module.set_state(state)
 
-        if len(opts) > 1:
-            opts[0].to(device)
+        module.reset_target()
+
+        module.target, opt = fabric.setup(module.target, opt)
+        if metaopt is not None:
+            opt, metaopt = fabric.setup(opt, metaopt)
             
         for _ in range(epochs):
             module.target.train()
             for i, (X, y) in enumerate(train_loader):
-                X, y = X.to(device), y.to(device)
-                
-                for opt in opts.reverse():
-                    opt.zero_grad()
+
+                if metaopt is not None:
+                    metaopt.zero_grad()
+                opt.zero_grad()
 
                 x_embd, _, err = module.training_step((X, y), i)
-                err.backward()
+                fabric.backward(err)
 
-                if len(opts) > 1:
-                    opts[0].step(x_embd)
-                opts[-1].step()
+                if metaopt is not None:
+                    opt.step(x_embd)
+                else:
+                    opt.step()
+                metaopt.step()
             
             test(module, test_loader)
 
@@ -84,36 +104,37 @@ def train_twostep(dataset, epochs: int, reps: int, module: ModuleABC):
     """
 
     train_loader, test_loader = dataset
+    train_loader = fabric.setup_dataloaders(train_loader)
+    test_loader = fabric.setup_dataloaders(test_loader)
 
     state = None
     for _ in range(reps):
         opts = module.configure_optimizers()
 
-        module.reset_target()
-        module.target.to(device)
+        opt = opts[0]
+        metaopt = opts[1]
 
         if state is not None:
             module.set_state(state)
 
-        opts[0].to(device)
-        opt = opts[0]
-        metaopt = opts[1]
+        module.reset_target()
+
+        module.target, opt = fabric.setup(module.target, opt)
+        opt, metaopt = fabric.setup(opt, metaopt)
             
         for _ in range(epochs):
             module.target.train()
             batches = enumerate(train_loader)
 
             lasti, (lastX, lasty) = next(batches)
-            lastX, lasty = lastX.to(device), lasty.to(device)
 
             for i, (X, y) in enumerate(batches):
-                X, y = X.to(device), y.to(device)
                 
                 # BATCH 1
                 opt.zero_grad()
 
                 x_embd, _, err = module.training_step((lastX, lasty), lasti)
-                err.backward()
+                fabric.backward(err)
 
                 opt.step(x_embd)
 
@@ -121,7 +142,7 @@ def train_twostep(dataset, epochs: int, reps: int, module: ModuleABC):
                 metaopt.zero_grad()
 
                 x_embd, _, err = module.training_step((X, y), i)
-                err.backward()
+                fabric.backward(err)
 
                 metaopt.step()
 

@@ -3,7 +3,7 @@ import argparse
 
 import torch
 
-from pytorch_lightning.loggers import NeptuneLogger
+from lightning.pytorch.loggers import NeptuneLogger
 
 from modules.adam import Adam
 from modules.gwnmo import GWNMO

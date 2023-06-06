@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-import pytorch_lightning as pl
+import lightning.pytorch as pl
 
 
 class ModuleABC(pl.LightningModule, metaclass = ABCMeta):
