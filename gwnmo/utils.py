@@ -35,7 +35,8 @@ def _setup_arg_parser():
     parser.add_argument("--module", choices=['adam', 'gwnmo', 'hypergrad'], required=True, default='gwnmo', help='Module selection')
     parser.add_argument('--lr', type=float, default=0.01, required=False, help='Learning rate')
     parser.add_argument("--gamma", type=float, default=0.01, required=False, help='Gamma')
-    parser.add_argument('--normalize', action='store_false', help='Normalization in GWNMO')
+    parser.add_argument('--nonorm', action='store_false', help='Normalization in GWNMO')
+    parser.add_argument('--noneptune', action='store_false', help='Disable neptune')
 
     return parser
 

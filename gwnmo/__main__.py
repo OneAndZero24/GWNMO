@@ -8,14 +8,15 @@ from train import train, train_twostep
 
 args = parser.parse_args()
 
-logger = setup_logger(args)
+if not args.noneptune:
+    logger = setup_logger(args)
 
 dataset = map2cmd['dataset'][args.dataset]()
 Module = map2cmd['module'][args.module]
 
 global module
 if Module == GWNMO:
-    module = Module(args.lr, args.gamma, args.normalize)
+    module = Module(args.lr, args.gamma, args.nonorm)
 
 if Module == HyperGrad:
     module = Module(args.lr, args.gamma)
