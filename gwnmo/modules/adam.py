@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from module_abc import ModuleABC
+from modules.module_abc import ModuleABC
 
 from models.target import Target
 from models.feat_ex import FeatEx

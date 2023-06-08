@@ -3,12 +3,7 @@ import argparse
 
 import torch
 
-from lightning.pytorch.loggers import NeptuneLogger
-
-from modules.adam import Adam
-from modules.gwnmo import GWNMO
-from modules.hypergrad import HyperGrad
-
+from __init__ import __version__
 from datasets import *
 
 
@@ -35,22 +30,16 @@ def _setup_arg_parser():
     parser.add_argument("--module", choices=['adam', 'gwnmo', 'hypergrad'], required=True, default='gwnmo', help='Module selection')
     parser.add_argument('--lr', type=float, default=0.01, required=False, help='Learning rate')
     parser.add_argument("--gamma", type=float, default=0.01, required=False, help='Gamma')
-    parser.add_argument('--nonorm', action='store_false', help='Normalization in GWNMO')
-    parser.add_argument('--noneptune', action='store_false', help='Disable neptune')
+    parser.add_argument('--nonorm', action='store_true', help='Normalization in GWNMO')
+    parser.add_argument('--noneptune', action='store_true', help='Disable neptune')
 
     return parser
 
 parser = _setup_arg_parser()    # Global argument parser
 
 
-def setup_logger(args):
-    ts = args.values().append("v2.x.y")
-    return NeptuneLogger(
-        api_key = os.getenv('NEPTUNE_API_TOKEN'),
-        project = os.getenv('NEPTUNE_PROJECT'),
-        tags = ts
-    )
 logger = None
+
 
 def _setup_torch():
     """
@@ -61,6 +50,10 @@ def _setup_torch():
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 device = _setup_torch()
+
+from modules.adam import Adam
+from modules.gwnmo import GWNMO
+from modules.hypergrad import HyperGrad
 
 # Maps "selector" arguments to their options handlers
 map2cmd = {

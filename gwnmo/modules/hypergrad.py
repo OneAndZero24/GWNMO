@@ -3,7 +3,7 @@ from torch import nn
 
 import learn2learn as l2l
 
-from module_abc import ModuleABC
+from modules.module_abc import ModuleABC
 
 from models.target import Target
 from models.feat_ex import FeatEx

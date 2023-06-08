@@ -1,15 +1,17 @@
-from utils import parser, map2cmd, logger, setup_logger
+from utils import parser, map2cmd, logger
+from neptune_logger import NeptuneLogger
 
 from modules.adam import Adam
 from modules.gwnmo import GWNMO
 from modules.hypergrad import HyperGrad
+
 from train import train, train_twostep
 
 
 args = parser.parse_args()
 
-if not args.noneptune:
-    logger = setup_logger(args)
+if args.noneptune == False:
+    logger = NeptuneLogger(args)
 
 dataset = map2cmd['dataset'][args.dataset]()
 Module = map2cmd['module'][args.module]
@@ -28,4 +30,4 @@ if args.twostep:
 else:
    train(dataset, args.epochs, args.reps, module)
 
-logger.log_model_summary(model=module, max_depth=-1)
+logger.log_model_summary(module)

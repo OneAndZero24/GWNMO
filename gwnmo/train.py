@@ -1,6 +1,4 @@
 import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
 
 import lightning as L
 
@@ -36,8 +34,11 @@ def test(module: ModuleABC, test_loader):
             test_accuracy += accuracy(preds, y)
         test_error /= len(test_loader)
         test_accuracy /= len(test_loader)
-    logger.experiment["accuracy"].log(test_accuracy)
-    logger.experiment["loss"].log(test_error)
+    if logger is not None:
+        logger.log_metrics({
+            "accuracy": test_accuracy,
+            "loss": test_error
+            })
 
 
 def train(dataset, epochs: int, reps: int, module: ModuleABC):
