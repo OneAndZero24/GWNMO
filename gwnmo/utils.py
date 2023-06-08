@@ -26,6 +26,7 @@ def _setup_arg_parser():
     parser.add_argument('--reps', type=int, default=1, required=False, help='Repetitions of training with persistent optimizer state but changing optimizee')
     parser.add_argument('--twostep', action='store_true', help='Optional meta-learning paradigm where one batch is used for fitting and later for validation')
     parser.add_argument("--dataset", choices=['mnist', 'fmnist', 'cifar10', 'svhn'], required=True, default='mnist', help='Dataset selection')
+    parser.add_argument("--datasetdir", type=str, required=False, default='', help='Dataset directory path')
 
     parser.add_argument("--module", choices=['adam', 'gwnmo', 'hypergrad'], required=True, default='gwnmo', help='Module selection')
     parser.add_argument('--lr', type=float, default=0.01, required=False, help='Learning rate')

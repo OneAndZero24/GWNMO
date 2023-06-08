@@ -1,5 +1,6 @@
 from utils import parser, map2cmd, logger
 from neptune_logger import NeptuneLogger
+from datasets import DATASET_DIR
 
 from modules.adam import Adam
 from modules.gwnmo import GWNMO
@@ -12,6 +13,9 @@ args = parser.parse_args()
 
 if args.noneptune == False:
     logger = NeptuneLogger(args)
+
+if args.datasetdir != '':
+    DATASET_DIR = args.datasetdir
 
 dataset = map2cmd['dataset'][args.dataset]()
 Module = map2cmd['module'][args.module]
