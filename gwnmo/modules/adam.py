@@ -3,6 +3,7 @@ from torch import nn
 
 from modules.module_abc import ModuleABC
 
+from utils import device
 from models.target import Target
 from models.feat_ex import FeatEx
 
@@ -17,20 +18,22 @@ class Adam(ModuleABC):
 
         self.state = None   # For repetitions
 
-        self.FE = FeatEx
-        self.target = Target()
+        self.FE = FeatEx().to(device)
+        self._target = Target().to(device)
         self.loss = nn.NLLLoss()
+
+        self.lr=lr
 
     @property
     def target(self):
-        return self.target
+        return self._target
 
     def reset_target(self):
         """
         Reinitalizes target model
         """
 
-        self.target = Target()
+        self._target = Target().to(device)
 
     def get_state(self, opt):
         """
@@ -54,7 +57,7 @@ class Adam(ModuleABC):
 
         x, y = batch
         x_embd = torch.reshape(self.FE(x), (-1, 512))
-        preds = self.target(x_embd)
+        preds = self._target(x_embd)
         err = self.loss(preds, y)
         return (x_embd, preds, err)
 
@@ -63,7 +66,7 @@ class Adam(ModuleABC):
         Sets-up & return proper optimizer
         """
 
-        opt = torch.optim.Adam(self.target.parameters(), lr=self.lr)
+        opt = torch.optim.Adam(self._target.parameters(), lr=self.lr)
         if self.state is not None:
             opt.load_state_dict(self.state)
         return [opt]

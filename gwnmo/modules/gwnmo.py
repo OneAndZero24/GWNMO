@@ -3,6 +3,7 @@ from torch import nn
 
 from modules.module_abc import ModuleABC
 
+from utils import device
 from models.target import Target
 from models.feat_ex import FeatEx
 from models.meta_opt import MetaOptimizer
@@ -17,44 +18,40 @@ class GWNMO(ModuleABC):
     def __init__(self, lr: float = 0.01, gm: float = 0.001, normalize: bool = True):
         super(GWNMO, self).__init__()
 
-        self.MO = MetaOptimizer()
+        self.MO = MetaOptimizer().to(device)
 
-        self.FE = FeatEx
-        self.target = Target()
+        self.FE = FeatEx().to(device)
+        self._target = Target().to(device)
         self.loss = nn.NLLLoss()
+        
         self.lr = lr
-
-        self.opt = GWNMOopt(
-            model=self.target, 
-            transform=self.MO, 
-            gamma=gm, 
-            normalize=normalize
-        )
+        self.gamma = gm
+        self.normalize = normalize
 
     @property
     def target(self):
-        return self.target
+        return self._target
 
     def reset_target(self):
         """
         Reinitalizes target model
         """
 
-        self.target = Target()
+        self._target = Target().to(device)
 
     def get_state(self, opt):
         """
         Given optimizer returns it's state
         """
 
-        return opt
+        return opt.transform
 
     def set_state(self, state):
         """
         Sets optimizer state in order to save it
         """
 
-        pass
+        self.MO = state
 
     def training_step(self, batch, batch_idx):
         """
@@ -64,7 +61,7 @@ class GWNMO(ModuleABC):
 
         x, y = batch
         x_embd = torch.reshape(self.FE(x), (-1, 512))
-        preds = self.target(x_embd)
+        preds = self._target(x_embd)
         err = self.loss(preds, y)
         return (x_embd, preds, err)
 
@@ -72,6 +69,11 @@ class GWNMO(ModuleABC):
         """
         Sets-up & return proper optimizers (meta and normal)
         """
-
-        metaopt = torch.optim.Adam(self.opt.parameters(), lr=self.lr)
-        return [self.opt, metaopt]
+        opt = GWNMOopt(
+            model=self._target, 
+            transform=self.MO, 
+            gamma=self.gamma, 
+            normalize=self.normalize
+        ).to(device)
+        metaopt = torch.optim.Adam(opt.parameters(), lr=self.lr)
+        return [opt, metaopt]

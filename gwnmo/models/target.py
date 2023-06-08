@@ -13,7 +13,8 @@ class Target(nn.Module):
         super(Target, self).__init__()
 
         self.seq = nn.Sequential()
-        self.seq.append(nn.Linear(512, 10))
+        self.seq.append(nn.Linear(512, 64))
+        self.seq.append(nn.Linear(64, 10))
 
     def forward(self, x: torch.Tensor):
         x = self.seq(x)

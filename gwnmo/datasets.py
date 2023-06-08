@@ -1,3 +1,4 @@
+import os
 import torch
 from torch.utils.data import DataLoader
 import torchvision.datasets as datasets
@@ -6,8 +7,9 @@ from torchvision.models import ResNet18_Weights
 
 
 _kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
-DATASET_DIR = '/shared/sets/datasets'
-
+DATASET_DIR = os.getenv('DATASET_DIR')
+if DATASET_DIR is None:
+    DATASET_DIR = '/shared/sets/datasets'
 
 def setup_MNIST(batch_size: int = 32):
     """
@@ -85,11 +87,11 @@ def setup_SVHN(batch_size: int = 32):
         ResNet18_Weights.DEFAULT.transforms(antialias=True), 
     ])
     train_loader = DataLoader(
-        datasets.SVHN(DATASET_DIR, train=True, download=True, transform=trans),
+        datasets.SVHN(DATASET_DIR, split='train', download=True, transform=trans),
         batch_size=batch_size, shuffle=True, **_kwargs
     )
     test_loader = DataLoader(
-        datasets.SVHN(DATASET_DIR, train=False, transform=trans),
+        datasets.SVHN(DATASET_DIR, split='test', transform=trans),
         batch_size=batch_size, shuffle=False, **_kwargs
     )
 

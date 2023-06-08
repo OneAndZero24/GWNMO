@@ -5,6 +5,7 @@ import learn2learn as l2l
 
 from modules.module_abc import ModuleABC
 
+from utils import device
 from models.target import Target
 from models.feat_ex import FeatEx
 
@@ -35,27 +36,23 @@ class HyperGrad(ModuleABC):
 
         self.state = None   # For repetitions
 
-        self.FE = FeatEx
-        self.target = Target()
+        self.FE = FeatEx().to(device)
+        self._target = Target().to(device)
         self.loss = nn.NLLLoss()
-        self.lr = lr
 
-        self.opt = l2l.optim.LearnableOptimizer(
-            model=self.target, 
-            transform=HypergradTransform,
-            lr = gm
-        )
+        self.lr = lr
+        self.gamma = gm
 
     @property
     def target(self):
-        return self.target
+        return self._target
 
     def reset_target(self):
         """
         Reinitalizes target model
         """
 
-        self.target = Target()
+        self._target = Target().to(device)
 
     def get_state(self, opt):
         """
@@ -79,7 +76,7 @@ class HyperGrad(ModuleABC):
 
         x, y = batch
         x_embd = torch.reshape(self.FE(x), (-1, 512))
-        preds = self.target(x_embd)
+        preds = self._target(x_embd)
         err = self.loss(preds, y)
         return (x_embd, preds, err)
 
@@ -87,6 +84,10 @@ class HyperGrad(ModuleABC):
         """
         Sets-up & return proper optimizers (meta and normal)
         """
-
-        metaopt = torch.optim.Adam(self.opt.parameters(), lr=self.lr)
-        return [self.opt, metaopt]
+        opt = l2l.optim.LearnableOptimizer(
+            model=self._target, 
+            transform=HypergradTransform,
+            lr = self.gamma
+        ).to(device)
+        metaopt = torch.optim.Adam(opt.parameters(), lr=self.lr)
+        return [opt, metaopt]

@@ -1,6 +1,5 @@
 from utils import parser, map2cmd, logger
 from neptune_logger import NeptuneLogger
-from datasets import DATASET_DIR
 
 from modules.adam import Adam
 from modules.gwnmo import GWNMO
@@ -14,9 +13,6 @@ args = parser.parse_args()
 if args.noneptune == False:
     logger = NeptuneLogger(args)
 
-if args.datasetdir != '':
-    DATASET_DIR = args.datasetdir
-
 dataset = map2cmd['dataset'][args.dataset]()
 Module = map2cmd['module'][args.module]
 
@@ -29,9 +25,10 @@ if Module == HyperGrad:
 else:
     module = Module(args.lr)
 
+if logger is not None:
+    logger.log_model_summary(module)
+
 if args.twostep:
     train_twostep(dataset, args.epochs, args.reps, module)
 else:
    train(dataset, args.epochs, args.reps, module)
-
-logger.log_model_summary(module)

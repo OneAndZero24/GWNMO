@@ -18,7 +18,8 @@ class NeptuneLogger(Logger):
     def __init__(self, args):
         super(NeptuneLogger, self).__init__()
         self.run = neptune.init_run()
-        tags = list(vars(args).values()).append(__version__)
+        tags = [ k+': '+str(v) for (k, v) in list(vars(args).items()) ]
+        tags.append(__version__)
         self.run["sys/tags"].add(tags)
 
     @property

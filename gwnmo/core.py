@@ -26,7 +26,7 @@ class GWNMO(torch.nn.Module):
             'model': model,
         }
 
-        self.transform = transform()
+        self.transform = transform
 
     def step(self, x_embd, closure=None):
         model = self.info['model']
