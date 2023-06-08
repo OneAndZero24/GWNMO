@@ -4,6 +4,8 @@ from modules.module_abc import ModuleABC
 from utils import device, logger, accuracy
 
 
+# TODO Consider Lightning Fabric, omitted it for now for code clarity
+
 def test(module: ModuleABC, test_loader):
     """
     Test target on whole test
