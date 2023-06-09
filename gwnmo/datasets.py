@@ -62,6 +62,7 @@ def setup_CIFAR10(batch_size: int = 32):
     """
 
     trans = transforms.Compose([
+        transforms.Resize((28,28)),
         transforms.ToTensor(),
         ResNet18_Weights.DEFAULT.transforms(antialias=True), 
     ])
@@ -83,6 +84,7 @@ def setup_SVHN(batch_size: int = 32):
     """
 
     trans = transforms.Compose([
+        transforms.Resize((28,28)),
         transforms.ToTensor(),
         ResNet18_Weights.DEFAULT.transforms(antialias=True), 
     ])
