@@ -10,7 +10,9 @@ from train import train, train_twostep
 
 args = parser.parse_args()
 
-if args.noneptune == False:
+log = not args.noneptune
+
+if log:
     logger = NeptuneLogger(args)
 
 dataset = map2cmd['dataset'][args.dataset]()
@@ -25,10 +27,10 @@ if Module == HyperGrad:
 else:
     module = Module(args.lr)
 
-if logger is not None:
+if log:
     logger.log_model_summary(module)
 
 if args.twostep:
-    train_twostep(dataset, args.epochs, args.reps, module)
+    train_twostep(dataset, args.epochs, args.reps, module, log)
 else:
-   train(dataset, args.epochs, args.reps, module)
+   train(dataset, args.epochs, args.reps, module, log)

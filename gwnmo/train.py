@@ -6,7 +6,7 @@ from utils import device, logger, accuracy
 
 # TODO Consider Lightning Fabric, omitted it for now for code clarity
 
-def test(module: ModuleABC, test_loader):
+def test(module: ModuleABC, test_loader, log: bool):
     """
     Test target on whole test
     """
@@ -24,14 +24,14 @@ def test(module: ModuleABC, test_loader):
             test_accuracy += accuracy(preds, y)
         test_error /= len(test_loader)
         test_accuracy /= len(test_loader)
-    if logger is not None:
+    if log:
         logger.log_metrics({
-            "train/accuracy": test_accuracy,
-            "train/loss": test_error
+            "accuracy": test_accuracy,
+            "loss": test_error
             })
 
 
-def train(dataset, epochs: int, reps: int, module: ModuleABC):
+def train(dataset, epochs: int, reps: int, module: ModuleABC, log: bool):
     """
     Normal training flow.
     - Gets batch
@@ -66,11 +66,11 @@ def train(dataset, epochs: int, reps: int, module: ModuleABC):
                     opts[0].step(x_embd)
                 opts[-1].step()
             
-            test(module, test_loader)
+            test(module, test_loader, log)
 
         state = module.get_state(opts[0])
 
-def train_twostep(dataset, epochs: int, reps: int, module: ModuleABC):
+def train_twostep(dataset, epochs: int, reps: int, module: ModuleABC, log: bool):
     """
     Two batch meta-learning flow.
     Note: Supports only `gwnmo`
@@ -121,5 +121,5 @@ def train_twostep(dataset, epochs: int, reps: int, module: ModuleABC):
 
                 lastX, lasty = X, y
             
-            test(module, test_loader)
+            test(module, test_loader, log)
 
