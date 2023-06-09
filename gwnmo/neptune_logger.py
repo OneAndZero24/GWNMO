@@ -15,12 +15,9 @@ class NeptuneLogger(Logger):
     Custom, simplistic neptune logger for Lightning due to `neptune` vs `neptune-client` problems.
     """
 
-    def __init__(self, args):
+    def __init__(self):
         super(NeptuneLogger, self).__init__()
         self.run = neptune.init_run()
-        tags = [ k+': '+str(v) for (k, v) in list(vars(args).items()) ]
-        tags.append(__version__)
-        self.run["sys/tags"].add(tags)
 
     @property
     def name(self):
@@ -42,6 +39,15 @@ class NeptuneLogger(Logger):
     def log_metrics(self, metrics, step):
         for key, value in metrics.items():
             self.run[key].append(value)
+
+    def tag(self, args):
+        """
+        Converts `args` Namespace to run tags
+        """
+
+        tags = [ k+': '+str(v) for (k, v) in list(vars(args).items()) ]
+        tags.append(__version__)
+        self.run["sys/tags"].add(tags)
 
     def log_model_summary(self, module):
         """

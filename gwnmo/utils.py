@@ -3,7 +3,8 @@ import argparse
 import torch
 
 from __init__ import __version__
-from datasets import *
+from neptune_logger import NeptuneLogger
+from .datasets import *
 
 
 def accuracy(predictions, targets):
@@ -29,14 +30,13 @@ def _setup_arg_parser():
     parser.add_argument('--lr', type=float, default=0.01, required=False, help='Learning rate')
     parser.add_argument("--gamma", type=float, default=0.01, required=False, help='Gamma')
     parser.add_argument('--nonorm', action='store_true', help='Normalization in GWNMO')
-    parser.add_argument('--noneptune', action='store_true', help='Disable neptune')
 
     return parser
 
 parser = _setup_arg_parser()    # Global argument parser
 
 
-logger = None
+logger = NeptuneLogger()
 
 
 def _setup_torch():
