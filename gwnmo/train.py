@@ -26,8 +26,8 @@ def test(module: ModuleABC, test_loader):
         test_accuracy /= len(test_loader)
     if logger is not None:
         logger.log_metrics({
-            "accuracy": test_accuracy,
-            "loss": test_error
+            "train/accuracy": test_accuracy,
+            "train/loss": test_error
             })
 
 
