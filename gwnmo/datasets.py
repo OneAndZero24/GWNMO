@@ -24,11 +24,11 @@ def setup_MNIST(batch_size: int = 32):
     ])
     train_loader = DataLoader(
         datasets.MNIST(DATASET_DIR, train=True, download=True, transform=trans),
-        batch_size=batch_size, shuffle=True, **_kwargs
+        batch_size=batch_size, shuffle=True, drop_last=True, **_kwargs
     )
     test_loader = DataLoader(
         datasets.MNIST(DATASET_DIR, train=False, download=True, transform=trans),
-        batch_size=batch_size, shuffle=False, **_kwargs
+        batch_size=batch_size, shuffle=False, drop_last=True, **_kwargs
     )
 
     return (train_loader, test_loader)
@@ -46,11 +46,11 @@ def setup_FMNIST(batch_size: int = 32):
     ])
     train_loader = DataLoader(
         datasets.FashionMNIST(DATASET_DIR, train=True, download=True, transform=trans),
-        batch_size=batch_size, shuffle=True, **_kwargs
+        batch_size=batch_size, shuffle=True, drop_last=True, **_kwargs
     )
     test_loader = DataLoader(
         datasets.FashionMNIST(DATASET_DIR, train=False, download=True, transform=trans),
-        batch_size=batch_size, shuffle=False, **_kwargs
+        batch_size=batch_size, shuffle=False, drop_last=True, **_kwargs
     )
 
     return (train_loader, test_loader)
@@ -68,11 +68,11 @@ def setup_CIFAR10(batch_size: int = 32):
     ])
     train_loader = DataLoader(
         datasets.CIFAR10(DATASET_DIR, train=True, download=True, transform=trans),
-        batch_size=batch_size, shuffle=True, **_kwargs
+        batch_size=batch_size, shuffle=True, drop_last=True, **_kwargs
     )
     test_loader = DataLoader(
         datasets.CIFAR10(DATASET_DIR, train=False, download=True, transform=trans),
-        batch_size=batch_size, shuffle=False, **_kwargs
+        batch_size=batch_size, shuffle=False, drop_last=True, **_kwargs
     )
 
     return (train_loader, test_loader)
@@ -90,11 +90,11 @@ def setup_SVHN(batch_size: int = 32):
     ])
     train_loader = DataLoader(
         datasets.SVHN(DATASET_DIR, split='train', download=True, transform=trans),
-        batch_size=batch_size, shuffle=True, **_kwargs
+        batch_size=batch_size, shuffle=True, drop_last=True, **_kwargs
     )
     test_loader = DataLoader(
         datasets.SVHN(DATASET_DIR, split='test', download=True, transform=trans),
-        batch_size=batch_size, shuffle=False, **_kwargs
+        batch_size=batch_size, shuffle=False, drop_last=True, **_kwargs
     )
 
     return (train_loader, test_loader)
