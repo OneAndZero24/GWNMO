@@ -19,7 +19,7 @@ def test(module: ModuleABC, test_loader):
     with torch.no_grad():
         for i, (X, y) in enumerate(test_loader):
             X.to(device), y.to(device)
-            _, preds, err = module.training_step(X, y, i)
+            _, preds, err = module.training_step((X, y), i)
             test_error += err
             test_accuracy += accuracy(preds, y)
         test_error /= len(test_loader)
