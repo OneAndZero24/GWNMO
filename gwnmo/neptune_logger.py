@@ -1,9 +1,5 @@
 import neptune
 
-import torch.nn as nn
-
-from torchsummary import summary
-
 from lightning.pytorch.loggers.logger import Logger
 from lightning.pytorch.utilities import rank_zero_only
 
@@ -54,6 +50,5 @@ class NeptuneLogger(Logger):
         Returns `torchsummary` of all `nn.Module` objects in module.
         """
 
-        for attr, value in module.__dict__.items():
-            if type(value) is nn.Module:
-                self.run['model_summary'] = summary(value)
+        for attr, value in module.__dict__['_modules'].items():
+            self.run['model_summary'].append(str(value))

@@ -4,7 +4,7 @@ import torch
 
 from __init__ import __version__
 from neptune_logger import NeptuneLogger
-from .datasets import *
+from datasets import *
 
 
 def accuracy(predictions, targets):

@@ -24,6 +24,8 @@ def test(module: ModuleABC, test_loader):
             test_accuracy += accuracy(preds, y)
         test_error /= len(test_loader)
         test_accuracy /= len(test_loader)
+    print(f'Accuracy: {test_accuracy}')     #DEBUG
+    print(f'Loss: {test_accuracy}')         #DEBUG
     logger.log_metrics({
         "accuracy": test_accuracy,
         "loss": test_error
