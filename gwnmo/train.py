@@ -6,7 +6,7 @@ from utils import device, logger, accuracy
 
 # TODO Consider Lightning Fabric, omitted it for now for code clarity
 
-def test(module: ModuleABC, test_loader):
+def test(module: ModuleABC, test_loader, epoch: int):
     """
     Test target on whole test
     """
@@ -24,12 +24,10 @@ def test(module: ModuleABC, test_loader):
             test_accuracy += accuracy(preds, y)
         test_error /= len(test_loader)
         test_accuracy /= len(test_loader)
-    print(f'Accuracy: {test_accuracy}')     #DEBUG
-    print(f'Loss: {test_accuracy}')         #DEBUG
     logger.log_metrics({
         "accuracy": test_accuracy,
         "loss": test_error
-        })
+        }, epoch)
 
 
 def train(dataset, epochs: int, reps: int, module: ModuleABC):
@@ -52,7 +50,7 @@ def train(dataset, epochs: int, reps: int, module: ModuleABC):
 
         opts = module.configure_optimizers()
 
-        for _ in range(epochs):
+        for I in range(epochs):
             module.target.train()
             for i, (X, y) in enumerate(train_loader):
                 X, y = X.to(device), y.to(device)
@@ -67,7 +65,7 @@ def train(dataset, epochs: int, reps: int, module: ModuleABC):
                     opts[0].step(x_embd)
                 opts[-1].step()
             
-            test(module, test_loader)
+            test(module, test_loader, I)
 
         state = module.get_state(opts[0])
 
@@ -85,7 +83,7 @@ def train_twostep(dataset, epochs: int, reps: int, module: ModuleABC):
     train_loader, test_loader = dataset
 
     state = None
-    for _ in range(reps):
+    for I in range(reps):
         module.reset_target()
 
         if state is not None:
@@ -122,5 +120,5 @@ def train_twostep(dataset, epochs: int, reps: int, module: ModuleABC):
 
                 lastX, lasty = X, y
             
-            test(module, test_loader)
+            test(module, test_loader, I)
 
