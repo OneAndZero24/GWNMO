@@ -17,8 +17,7 @@ Module = map2cmd['module'][args.module]
 global module
 if Module == GWNMO:
     module = Module(args.lr, args.gamma, not args.nonorm)
-
-if Module == HyperGrad:
+elif Module == HyperGrad:
     module = Module(args.lr, args.gamma)
 else:
     module = Module(args.lr)
