@@ -19,6 +19,7 @@ class GWNMO(ModuleABC):
         super(GWNMO, self).__init__()
 
         self.MO = MetaOptimizer().to(device)
+        self.MO.train()
 
         self.FE = FeatEx().to(device)
         self._target = Target().to(device)
@@ -52,12 +53,15 @@ class GWNMO(ModuleABC):
         """
 
         self.MO = state
+        self.MO.train()
 
     def training_step(self, batch, batch_idx):
         """
         Training step in most simple flow
         Returns `preds` & `err`
         """
+
+        print(f'lr: {self.lr}, gm: {self.gamma}')
 
         x, y = batch
         x_embd = torch.reshape(self.FE(x), (-1, 512))
