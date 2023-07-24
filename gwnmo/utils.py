@@ -4,7 +4,7 @@ import torch
 
 from __init__ import __version__
 from neptune_logger import NeptuneLogger
-from datasets import *
+from .datasets import *
 
 
 def accuracy(predictions, targets):
@@ -20,16 +20,27 @@ def _setup_arg_parser():
     Minimallistic `argparse` setup/handler
     """
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog='gwnmo')
 
     parser.add_argument('epochs', type=int, help='Number of epochs to train for')
     parser.add_argument('--reps', type=int, default=1, required=False, help='Repetitions of training with persistent optimizer state but changing optimizee')
-    parser.add_argument('--twostep', action='store_true', help='Optional meta-learning paradigm in GWNMO where one batch is used for fitting and later for validation')
-    parser.add_argument("--dataset", choices=['mnist', 'fmnist', 'cifar10', 'svhn'], required=True, default='mnist', help='Dataset selection')
-    parser.add_argument("--module", choices=['adam', 'gwnmo', 'hypergrad'], required=True, default='gwnmo', help='Module selection')
+
     parser.add_argument('--lr', type=float, default=0.01, required=False, help='Learning rate')
     parser.add_argument("--gamma", type=float, default=0.01, required=False, help='Gamma')
-    parser.add_argument('--nonorm', action='store_true', help='Normalization in GWNMO')
+
+    subparsers = parser.add_subparsers(title='mode', dest='mode', help='Learning paradigm selection', required=True)
+    
+    parser_classic = subparsers.add_parser('classic')
+    parser_classic.add_argument("--dataset", choices=['mnist', 'fmnist', 'cifar10', 'svhn'], required=True, default='mnist', help='Dataset selection')
+    parser_classic.add_argument("--module", choices=['adam', 'gwnmo', 'hypergrad'], required=True, default='gwnmo', help='Module selection')
+    parser_classic.add_argument('--twostep', action='store_true', help='Optional meta-learning paradigm in GWNMO where one batch is used for fitting and later for validation')
+    parser_classic.add_argument('--nonorm', action='store_true', help='Normalization in GWNMO')
+
+    parser_fs = subparsers.add_parser('fewshot')
+    parser_fs.add_argument("--dataset", choices=['omniglot'], required=True, default='omniglot', help='Dataset selection')
+    parser_fs.add_argument("--module", choices=['gwnmofs', 'metasgd', 'maml'], required=True, default='gwnmofs', help='Module selection')
+    parser_fs.add_argument('--nway', type=int, default=15, required=False, help='Number of classes in task')
+    parser_fs.add_argument('--kshot', type=int, default=1, required=False, help='Number of class examples')
 
     return parser
 
@@ -50,9 +61,9 @@ def _setup_torch():
 device = _setup_torch()
 
 
-from modules.adam import Adam
-from modules.gwnmo import GWNMO
-from modules.hypergrad import HyperGrad
+from modules.classic.adam import Adam
+from modules.classic.gwnmo import GWNMO
+from modules.classic.hypergrad import HyperGrad
 
 # Maps "selector" arguments to their options handlers
 map2cmd = {
