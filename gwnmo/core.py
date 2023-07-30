@@ -62,7 +62,7 @@ class GWNMO(torch.nn.Module):
                 updates = -self.gamma*selected*(torch.linalg.norm(grad)/torch.linalg.norm(selected))
             else:
                 updates = -self.gamma*h*grad
-            updates.detach_() # TODO why it's here
+            updates.detach_()
 
             start = 0
             for i in range(len(params)):
