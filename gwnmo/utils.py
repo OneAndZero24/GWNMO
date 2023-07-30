@@ -1,4 +1,5 @@
 import argparse
+import numpy as np
 
 import torch
 
@@ -79,3 +80,24 @@ map2cmd = {
         "svhn": setup_SVHN,
     }
 }
+
+def split_batch(batch, ways: int, shots: int):
+    """
+    Splits batch into adapt and eval parts.
+    Returns dict of tuples (data, labels) indexed by 'adapt', 'eval'.
+    """
+
+    X, y = batch
+    X, y = X.to(device), y.to(device)
+
+    adapt_indices = np.zeros(X.size(0), dtype=bool)
+    adapt_indices[np.arange(shots*ways) * 2] = True
+    eval_indices = torch.from_numpy(~adapt_indices)
+    adapt_indices = torch.from_numpy(adapt_indices)
+    adapt_X, adapt_y = X[adapt_indices], y[adapt_indices]
+    eval_X, eval_y = X[eval_indices], y[eval_indices]
+
+    return {
+        'adapt': (adapt_X, adapt_y),
+        'eval': (eval_X, eval_y)
+    }

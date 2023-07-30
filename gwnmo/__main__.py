@@ -33,6 +33,6 @@ else:
     dataset = map2cmd['dataset'][args.dataset]()
     Module = map2cmd['module'][args.module]
 
-    # TODO
+    # TODO GWNMO vs MetaSGD vs MAML on omniglot
 
     trainfs()

@@ -58,10 +58,8 @@ class GWNMO(ModuleABC):
     def training_step(self, batch, batch_idx):
         """
         Training step in most simple flow
-        Returns `preds` & `err`
+        Returns `x_embd`, `preds` & `err`
         """
-
-        print(f'lr: {self.lr}, gm: {self.gamma}')
 
         x, y = batch
         x_embd = torch.reshape(self.FE(x), (-1, 512))
@@ -73,6 +71,7 @@ class GWNMO(ModuleABC):
         """
         Sets-up & return proper optimizers (meta and normal)
         """
+
         opt = GWNMOopt(
             model=self._target, 
             transform=self.MO, 
