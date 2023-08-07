@@ -61,8 +61,6 @@ class GWNMO(ModuleABC):
         Returns `preds` & `err`
         """
 
-        print(f'lr: {self.lr}, gm: {self.gamma}')
-
         x, y = batch
         x_embd = torch.reshape(self.FE(x), (-1, 512))
         preds = self._target(x_embd)
