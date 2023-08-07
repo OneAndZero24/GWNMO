@@ -7,6 +7,8 @@ import torch
 
 from utils import device
 
+from torchviz import make_dot
+
 
 class GWNMO(torch.nn.Module):
     """
@@ -28,7 +30,7 @@ class GWNMO(torch.nn.Module):
 
         self.transform = transform
 
-    def step(self, x_embd, closure=None):
+    def step(self, x_embd, err, closure=None):
         model = self.info['model']
         # Ignore warnings as torch 1.5+ warns about accessing .grad of non-leaf
         # variables.
@@ -40,7 +42,7 @@ class GWNMO(torch.nn.Module):
             for p in params:
                 if hasattr(p, 'grad') and p.grad is not None:
                     p.grad.detach_()
-                p.data.detach_()
+                    p.data.detach_()
 
             grad_lengths: list[torch.Size] = [ param.grad.shape for param in params if hasattr(param, 'grad') and param.grad is not None ]
             
@@ -61,7 +63,7 @@ class GWNMO(torch.nn.Module):
                 updates = -self.gamma*selected*(torch.linalg.norm(grad)/torch.linalg.norm(selected))
             else:
                 updates = -self.gamma*h*grad
-            updates.detach_()
+            #updates.detach()
 
             start = 0
             for i in range(len(params)):
@@ -75,7 +77,7 @@ class GWNMO(torch.nn.Module):
             l2l.update_module(model, updates=None)
 
             for param in model.parameters():
-                param.requires_grad = True
+                #param.requires_grad = True
                 param.retain_grad()
 
     def zero_grad(self):
