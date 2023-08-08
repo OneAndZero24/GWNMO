@@ -3,8 +3,6 @@ import torch
 from modules.module_abc import ModuleABC
 from utils import device, logger, accuracy
 
-from torchviz import make_dot
-
 
 def test(module: ModuleABC, test_loader, epoch: int):
     """
@@ -58,17 +56,14 @@ def train(dataset, epochs: int, reps: int, module: ModuleABC):
                 for opt in reversed(opts):
                     opt.zero_grad()
 
-                x_embd, preds, err = module.training_step((X, y), i)
+                x_embd, _, err = module.training_step((X, y), i)
                 err.backward(retain_graph=True)
-                if i > 1:
+
+                if i > 0:
                     opts[-1].step()
 
-                #print(make_dot(preds, show_saved=True)) # DEBUG
-
                 if len(opts) > 1:
-                    opts[0].step(x_embd, err)
-
-                #opts[-1].step()
+                    opts[0].step(x_embd)
             
             test(module, test_loader, I)
 
