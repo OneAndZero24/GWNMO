@@ -57,11 +57,13 @@ def train(dataset, epochs: int, reps: int, module: ModuleABC):
                     opt.zero_grad()
 
                 x_embd, _, err = module.training_step((X, y), i)
-                err.backward()
+                err.backward(retain_graph=True)
+
+                if i > 0:
+                    opts[-1].step()
 
                 if len(opts) > 1:
                     opts[0].step(x_embd)
-                opts[-1].step()
             
             test(module, test_loader, I)
 
