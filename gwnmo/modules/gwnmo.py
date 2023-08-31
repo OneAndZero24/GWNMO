@@ -77,5 +77,5 @@ class GWNMO(ModuleABC):
             gamma=self.gamma, 
             normalize=self.normalize
         ).to(device)
-        metaopt = torch.optim.Adam(opt.parameters(), lr=self.lr)
+        metaopt = torch.optim.SGD(opt.parameters(), lr=self.lr) # Adam -> SGD
         return [opt, metaopt]
