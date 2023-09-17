@@ -30,11 +30,11 @@ def test(module: ModuleABC, test_loader, epoch: int):
 
 def train(dataset, epochs: int, reps: int, module: ModuleABC):
     """
-    Normal training flow.
+    Training flow.
     - Gets batch
     - Puts data through target
-    - Adjusts target
     - Adjusts weighting (meta-optimizer)
+    - Adjusts target on next batch
     """
 
     train_loader, test_loader = dataset
@@ -57,66 +57,14 @@ def train(dataset, epochs: int, reps: int, module: ModuleABC):
                     opt.zero_grad()
 
                 x_embd, _, err = module.training_step((X, y), i)
-                err.backward()
+                err.backward(retain_graph=True)
+
+                if i > 0:
+                    opts[-1].step()     # TARGET
 
                 if len(opts) > 1:
-                    opts[0].step(x_embd)
-                opts[-1].step()
+                    opts[0].step(x_embd)    # WEIGHTING
             
             test(module, test_loader, I)
 
         state = module.get_state(opts[0])
-
-def train_twostep(dataset, epochs: int, reps: int, module: ModuleABC):
-    """
-    Two batch meta-learning flow.
-    Note: Supports only `gwnmo`
-    - Gets two batches
-    - Puts first through target
-    - Adjusts target
-    - Puts second through target
-    - Adjusts weighting (meta-optimizer) based on second loss
-    """
-
-    train_loader, test_loader = dataset
-
-    state = None
-    for I in range(reps):
-        module.reset_target()
-
-        if state is not None:
-            module.set_state(state)
-
-        opts = module.configure_optimizers()
-        opt = opts[0]
-        metaopt = opts[1]
-
-        for _ in range(epochs):
-            module.target.train()
-            batches = enumerate(train_loader)
-
-            lasti, (lastX, lasty) = next(batches)
-            lastX, lasty = lastX.to(device), lasty.to(device)
-            for i, (X, y) in batches:
-                X, y = X.to(device), y.to(device)
-
-                # BATCH 1
-                opt.zero_grad()
-
-                x_embd, _, err = module.training_step((lastX, lasty), lasti)
-                err.backward()
-
-                opt.step(x_embd)
-
-                # BATCH 2
-                metaopt.zero_grad()
-
-                x_embd, _, err = module.training_step((X, y), i)
-                err.backward()
-
-                metaopt.step()
-
-                lastX, lasty = X, y
-            
-            test(module, test_loader, I)
-

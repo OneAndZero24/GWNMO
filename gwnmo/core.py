@@ -13,11 +13,10 @@ class GWNMO(torch.nn.Module):
     Gradient Weighting by Neural Meta Optimizer implementation based on learn2learn LearnableOptimizer
     """
 
-    def __init__(self, model, transform, gamma=0.01, normalize=True, detach=True):
+    def __init__(self, model, transform, gamma=0.01, normalize=True):
         super(GWNMO, self).__init__()
         self.gamma = gamma
         self.normalize = normalize
-        self.detach = detach
         assert isinstance(model, torch.nn.Module), \
             'model should inherit from nn.Module.'
 
@@ -38,20 +37,18 @@ class GWNMO(torch.nn.Module):
 
             params = list(model.parameters())
 
-            if self.detach:
-                for p in params:
-                    if hasattr(p, 'grad') and p.grad is not None:
-                        p.grad.detach_()
+            for p in params:
+                if hasattr(p, 'grad') and p.grad is not None:
+                    p.grad.detach_()
                     p.data.detach_()
 
             grad_lengths: list[torch.Size] = [ param.grad.shape for param in params if hasattr(param, 'grad') and param.grad is not None ]
             
             grad: torch.Tensor = torch.cat([ param.grad.flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ]).to(device)
-            param_vals: torch.Tensor = torch.cat([ param.data.flatten() for param in params ])
+            grad.requires_grad = False
 
-            if self.detach:
-                grad.requires_grad = False
-                param_vals.requires_grad = False
+            param_vals: torch.Tensor = torch.cat([ param.data.flatten() for param in params ])
+            param_vals.requires_grad = False
 
             h: torch.Tensor = self.transform(param_vals, grad, x_embd)
             temp : torch.Tensor = torch.clamp(h, min=0, max= 1)
@@ -62,7 +59,6 @@ class GWNMO(torch.nn.Module):
                 updates = -self.gamma*selected*(torch.linalg.norm(grad)/torch.linalg.norm(selected))
             else:
                 updates = -self.gamma*h*grad
-            updates.detach_()
 
             start = 0
             for i in range(len(params)):
@@ -76,7 +72,6 @@ class GWNMO(torch.nn.Module):
             l2l.update_module(model, updates=None)
 
             for param in model.parameters():
-                param.requires_grad = True
                 param.retain_grad()
 
     def zero_grad(self):
