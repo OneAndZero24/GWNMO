@@ -4,8 +4,8 @@ from modules.classic.adam import Adam
 from modules.classic.gwnmo import GWNMO
 from modules.classic.hypergrad import HyperGrad
 
-from train import train, train_twostep
-
+from train import train
+from trainfs import train as train_twostep
 
 args = parser.parse_args()
 
@@ -29,4 +29,4 @@ logger.log_model_summary(module)
 if args.mode == 'classic':
     train(dataset, args.epochs, args.reps, module)
 else:
-    trainfs()
+    train_twostep()

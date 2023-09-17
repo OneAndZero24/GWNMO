@@ -64,22 +64,26 @@ from modules.classic.adam import Adam
 from modules.classic.gwnmo import GWNMO
 from modules.classic.hypergrad import HyperGrad
 
+from modules.fewshot.gwnmofs import GWNMOFS
+
 # Maps "selector" arguments to their options handlers
 map2cmd = {
     "module": {
         "gwnmo": GWNMO,
         "hypergrad": HyperGrad,
         "adam": Adam,
+        "gwnmofs": GWNMOFS
     },
     "dataset": {
         "mnist": setup_MNIST,
         "fmnist": setup_FMNIST,
         "cifar10": setup_CIFAR10,
         "svhn": setup_SVHN,
+        "omniglot": setup_FS_Omniglot
     }
 }
 
-# TODO Extend for FS
+# TODO MAML/MetaSGD
 
 def split_batch(batch, ways: int, shots: int):
     """

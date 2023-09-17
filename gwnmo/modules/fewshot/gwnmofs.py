@@ -2,6 +2,8 @@ from typing import Any
 import torch
 from torch import nn
 
+from learn2learn.utils import clone_module
+
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
 from utils import device, split_batch
@@ -15,14 +17,14 @@ class GWNMOFS(FSModuleABC):
     GWNMOFS - Few Shot training algorithm based on GWNMO.
     """
 
-    def __init__(self, lr1: float = 0.01, lr2: float = 0.01, gm: float = 0.001, normalize: bool = True, ways: int = 1, shots: int = 5):
+    def __init__(self, lr1: float = 0.01, lr2: float = 0.01, gm: float = 0.001, normalize: bool = True, ways: int = 1, shots: int = 5, target: nn.Module = Target()):
         super(GWNMOFS, self).__init__()
 
         self.MO = MetaOptimizer().to(device)
         self.MO.train()
 
         self.FE = FeatEx().to(device)
-        self._target = Target().to(device)
+        self._target = target.to(device)
         self.loss = nn.NLLLoss()
 
         self.lr1 = lr1
@@ -70,7 +72,7 @@ class GWNMOFS(FSModuleABC):
         Create detached clone of target & wrap in self clone
         """
 
-        # TODO implement
+        return GWNMOFS(self.lr1, self.lr2, self.gamma, self.normalize, self.ways, self.shots, clone_module(self.target))
     
     def adapt(self, adapt_X_embd, adapt_y, eval_X_embd):
         """
@@ -104,8 +106,7 @@ class GWNMOFS(FSModuleABC):
 
         updates, preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
 
-        # TODO return err too 
-        # but GWNMOopt has _target params
+        # TODO eval step ?
 
         return (updates, preds)
     
@@ -118,6 +119,3 @@ class GWNMOFS(FSModuleABC):
         adam2 = torch.optim.Adam(self.target.parameters(), lr=self.lr2)
 
         return [adam1, adam2]
-
-        
-    
