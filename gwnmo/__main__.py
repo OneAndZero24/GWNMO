@@ -4,7 +4,7 @@ from modules.adam import Adam
 from modules.gwnmo import GWNMO
 from modules.hypergrad import HyperGrad
 
-from train import train, train_twostep
+from train import train
 
 
 args = parser.parse_args()
@@ -24,7 +24,4 @@ else:
 
 logger.log_model_summary(module)
 
-if args.twostep:
-    train_twostep(dataset, args.epochs, args.reps, module)
-else:
-   train(dataset, args.epochs, args.reps, module)
+train(dataset, args.epochs, args.reps, module)
