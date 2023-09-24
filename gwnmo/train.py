@@ -60,10 +60,10 @@ def train(dataset, epochs: int, reps: int, module: ModuleABC):
                 err.backward(retain_graph=True)
 
                 if i > 0:
-                    opts[-1].step()     # TARGET
+                    opts[-1].step()     # ADJUST WEIGTING NETWORK
 
                 if len(opts) > 1:
-                    opts[0].step(x_embd)    # WEIGHTING
+                    opts[0].step(x_embd)    # ADJUST TARGET WITH WEIGHTED GRAD
             
             test(module, test_loader, I)
 
