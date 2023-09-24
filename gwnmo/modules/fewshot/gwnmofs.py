@@ -106,7 +106,7 @@ class GWNMOFS(FSModuleABC):
 
         updates, preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
 
-        # TODO eval step ?
+        # TODO eval step - split outside in trainfs
 
         return (updates, preds)
     
@@ -114,6 +114,8 @@ class GWNMOFS(FSModuleABC):
         """
         Sets-up & returns proper optimizers alpha & start
         """
+
+        # TODO is this ok?
 
         adam1 = torch.optim.Adam(self.opt.parameters(), lr=self.lr1)
         adam2 = torch.optim.Adam(self.target.parameters(), lr=self.lr2)

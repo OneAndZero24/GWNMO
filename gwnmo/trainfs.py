@@ -20,24 +20,4 @@ def train(dataset_gen, epochs: int, reps: int, adapt_steps: int,
     """
 
     # TODO loop
-    for batch in batches:
-        loss1 = 0
-        loss2 = 0
-        for item in batch:
-            support, query = item
-            c = target.clone()
-            l = c.forward(support) # before adaptation
-
-            gwnmo.step(l) # adapt
-
-            loss1 += c.forward(query) # after adaptation
-
-            params = c.get_params()
-            loss2 = target.clone().set_params(params).forward(query)
-
-        loss1 /= len(batch)
-        loss2 /= len(batch)
-        adam1.step(loss1) # adjust GWNMO
-        adam2.step(loss2) # adjust target
-
-# TODO rewrite all no detach
+    
