@@ -58,7 +58,7 @@ class GWNMO(ModuleABC):
     def training_step(self, batch, batch_idx):
         """
         Training step in most simple flow
-        Returns `x_embd`, `preds` & `err`
+        Returns `preds` & `err`
         """
 
         x, y = batch
