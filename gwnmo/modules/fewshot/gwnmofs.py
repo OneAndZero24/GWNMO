@@ -1,4 +1,3 @@
-from typing import Any
 import torch
 from torch import nn
 
@@ -17,7 +16,7 @@ class GWNMOFS(FSModuleABC):
     GWNMOFS - Few Shot training algorithm based on GWNMO.
     """
 
-    def __init__(self, lr1: float = 0.01, lr2: float = 0.01, gm: float = 0.001, normalize: bool = True, ways: int = 1, shots: int = 5, target: nn.Module = Target()):
+    def __init__(self, lr1: float = 0.01, lr2: float = 0.01, gm: float = 0.001, normalize: bool = True, adaptation_steps: int = 1, ways: int = 1, shots: int = 5, target: nn.Module = Target()):
         super(GWNMOFS, self).__init__()
 
         self.MO = MetaOptimizer().to(device)
@@ -31,6 +30,7 @@ class GWNMOFS(FSModuleABC):
         self.lr2 = lr2
         self.gamma = gm
         self.normalize = normalize
+        self.adaptation_steps = adaptation_steps
         self.ways = ways
         self.shots = shots
 
@@ -79,22 +79,18 @@ class GWNMOFS(FSModuleABC):
         Single GWNMOFS adaptation step
         """
 
-        c = self.clone()
+        preds = self.target(adapt_X_embd)
+        err = self.loss(preds, adapt_y)
+        err.backward(retain_graph=True)
 
-        c.opt.zero_grad()
+        self.opt.step(adapt_X_embd)
 
-        preds = c.target(adapt_X_embd)
-        err = c.loss(preds, adapt_y)
-        err.backward()
-
-        updates = c.opt.step(adapt_X_embd)
-
-        return (updates, c.target(eval_X_embd))
+        return self.target(eval_X_embd)
 
     def training_step(self, batch, batch_idx):
         """
         Single training step
-        Returns `updates` & `preds`
+        Returns `preds` & `err`
         """
 
         split = split_batch(batch, self.ways, self.shots)
@@ -104,18 +100,19 @@ class GWNMOFS(FSModuleABC):
         adapt_X_embd = torch.reshape(self.FE(adapt_X), (-1, 512))
         eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 512))
 
-        updates, preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
+        c = self.clone()
+        for i in range(self.adaptation_steps):
+            c.opt.zero_grad()
+            preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
 
-        # TODO eval step - split outside in trainfs
+        err = self.loss(preds, eval_y)
 
-        return (updates, preds)
+        return (eval_X_embd, preds, err)
     
     def configure_optimizers(self) -> list:
         """
         Sets-up & returns proper optimizers alpha & start
         """
-
-        # TODO is this ok?
 
         adam1 = torch.optim.Adam(self.opt.parameters(), lr=self.lr1)
         adam2 = torch.optim.Adam(self.target.parameters(), lr=self.lr2)

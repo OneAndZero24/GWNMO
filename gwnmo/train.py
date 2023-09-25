@@ -30,7 +30,7 @@ def test(module: ModuleABC, test_loader, epoch: int):
 
 def train(dataset, epochs: int, reps: int, module: ModuleABC):
     """
-    Training flow.
+    Training flow
     - Gets batch
     - Puts data through target
     - Adjusts weighting (meta-optimizer)
