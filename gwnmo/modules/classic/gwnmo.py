@@ -71,6 +71,7 @@ class GWNMO(ModuleABC):
         """
         Sets-up & return proper optimizers (meta and normal)
         """
+
         opt = GWNMOopt(
             model=self._target, 
             transform=self.MO, 

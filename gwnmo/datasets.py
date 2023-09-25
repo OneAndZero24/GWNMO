@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torchvision.models import ResNet18_Weights
-
+import learn2learn as l2l
 
 _kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
 DATASET_DIR = os.getenv('DATASET_DIR')
@@ -98,3 +98,20 @@ def setup_SVHN(batch_size: int = 32):
     )
 
     return (train_loader, test_loader)
+
+def setup_FS_Omniglot(ways: int, shots: int):
+    """
+    Returns properly setup Omniglot Taskset:
+    `(taskset.train, taskset.test)`
+    """
+
+    tasksets = l2l.vision.benchmarks.get_tasksets(
+        'omniglot',
+        train_ways=ways,
+        train_samples=shots,
+        test_ways=ways,
+        test_samples=shots,
+        root=DATASET_DIR,
+    )
+
+    return (tasksets.train, tasksets.test)
