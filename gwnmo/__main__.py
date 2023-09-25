@@ -13,7 +13,7 @@ args = parser.parse_args()
 
 logger.tag(args)
 
-dataset = map2cmd['dataset'][args.dataset]()
+dataset_gen = map2cmd['dataset'][args.dataset]
 Module = map2cmd['module'][args.module]
 
 if args.mode == 'classic':
@@ -26,11 +26,11 @@ if args.mode == 'classic':
 
     logger.log_model_summary(module)
 
-    train(dataset, args.epochs, args.reps, module)
+    train(dataset_gen(), args.epochs, args.reps, module)
 else:
     if Module == GWNMOFS:
         module = Module(args.lr, args.lr2, args.gamma, not args.nonorm, args.steps, args.ways, args.shots)
 
     logger.log_model_summary(module)
 
-    train_twostep()
+    train_twostep(dataset_gen(args.ways, args.shots), args.epochs, module)

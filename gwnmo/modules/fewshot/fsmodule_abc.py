@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-from gwnmo.modules.module_abc import ModuleABC
+from modules.module_abc import ModuleABC
 
 
 class FSModuleABC(ModuleABC, metaclass = ABCMeta):
