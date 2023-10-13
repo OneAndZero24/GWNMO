@@ -5,8 +5,7 @@ import warnings
 import learn2learn as l2l
 import torch
 
-from utils import device
-from common import normalize
+from utils import device, normalize_weighting
 
 
 class GWNMO(torch.nn.Module):
@@ -55,7 +54,7 @@ class GWNMO(torch.nn.Module):
 
             updates: torch.Tensor
             if self.normalize:
-                updates = -self.gamma*normalize(h, grad)
+                updates = -self.gamma*normalize_weighting(h, grad)
             else:
                 updates = -self.gamma*h*grad
 

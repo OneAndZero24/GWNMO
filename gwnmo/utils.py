@@ -8,6 +8,17 @@ from neptune_logger import NeptuneLogger
 from datasets import *
 
 
+def normalize_weighting(x, grad):
+    """
+    Permforms magical normalization described in PDF given meta optimizer's network output and gradient
+    """
+
+    temp : torch.Tensor = torch.clamp(x, min=0, max=1)
+    selected: torch.Tensor = temp*grad
+
+    return selected*(torch.linalg.norm(grad)/torch.linalg.norm(selected))
+
+
 def accuracy(predictions, targets):
     """
     Returns accuracy on batch

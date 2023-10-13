@@ -5,7 +5,7 @@ import learn2learn as l2l
 
 from modules.module_abc import ModuleABC
 
-from utils import device
+from utils import device, normalize_weighting
 from models.target import Target
 from models.feat_ex import FeatEx
 
@@ -19,7 +19,7 @@ def gen_hypergrad_transform(normalize: bool = False):
         return self.lr * grad
 
     def norm(self, grad):
-        return normalize(self.lr, grad)
+        return normalize_weighting(self.lr, grad)
 
     choice = norm if normalize else nonorm
 
