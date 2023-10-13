@@ -6,6 +6,7 @@ import learn2learn as l2l
 import torch
 
 from utils import device
+from common import normalize
 
 
 class GWNMO(torch.nn.Module):
@@ -51,12 +52,10 @@ class GWNMO(torch.nn.Module):
             param_vals.requires_grad = False
 
             h: torch.Tensor = self.transform(param_vals, grad, x_embd)
-            temp : torch.Tensor = torch.clamp(h, min=0, max= 1)
-            selected: torch.Tensor = temp*grad
 
             updates: torch.Tensor
             if self.normalize:
-                updates = -self.gamma*selected*(torch.linalg.norm(grad)/torch.linalg.norm(selected))
+                updates = -self.gamma*normalize(h, grad)
             else:
                 updates = -self.gamma*h*grad
 

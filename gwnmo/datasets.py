@@ -121,4 +121,7 @@ def setup_FS_Omniglot(ways: int, shots: int):
     ]
     tasksets = l2l.data.TaskDataset(dataset=fs_trans, task_transforms=transforms, num_tasks=-1)
 
+    # TODO MetaDataset only accepts a torch dataset as input
+    # TODO train/test split ?
+
     return (tasksets.train, tasksets.test)

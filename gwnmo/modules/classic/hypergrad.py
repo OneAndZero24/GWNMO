@@ -10,20 +10,32 @@ from models.target import Target
 from models.feat_ex import FeatEx
 
 
-class HypergradTransform(nn.Module):
+def gen_hypergrad_transform(normalize: bool = False):
     """
-    Hypergradient-style per-parameter learning rates
+    Generates Hypergrad Transform class
     """
 
-    def __init__(self, param, lr: int = 0.01):
-        super(HypergradTransform, self).__init__()
-
-        self.lr = lr * torch.ones_like(param, requires_grad=True)
-        self.lr = nn.Parameter(self.lr)
-
-    def forward(self, grad):
+    def nonorm(self, grad):
         return self.lr * grad
 
+    def norm(self, grad):
+        return normalize(self.lr, grad)
+
+    choice = norm if normalize else nonorm
+
+    class HypergradTransform(nn.Module):
+        """
+        Hypergradient-style per-parameter learning rates
+        """
+
+        def __init__(self, param, lr: int = 0.01):
+            super(HypergradTransform, self).__init__()
+
+            self.lr = lr * torch.ones_like(param, requires_grad=True)
+            self.lr = nn.Parameter(self.lr)
+            self.forward = choice
+
+    return HypergradTransform
 
 class HyperGrad(ModuleABC):
     """
@@ -31,7 +43,7 @@ class HyperGrad(ModuleABC):
     https://github.com/learnables/learn2learn/blob/master/examples/optimization/hypergrad_mnist.py
     """
 
-    def __init__(self, lr: float = 0.01, gm: float = 0.001):
+    def __init__(self, lr: float = 0.01, gm: float = 0.001, normalize: bool = False):
         super(HyperGrad, self).__init__()
 
         self.state = None   # For repetitions
@@ -42,6 +54,7 @@ class HyperGrad(ModuleABC):
 
         self.lr = lr
         self.gamma = gm
+        self.normalize = normalize
 
     @property
     def target(self):
@@ -86,7 +99,7 @@ class HyperGrad(ModuleABC):
         """
         opt = l2l.optim.LearnableOptimizer(
             model=self._target, 
-            transform=HypergradTransform,
+            transform=gen_hypergrad_transform(self.normalize),
             lr = self.gamma
         ).to(device)
         metaopt = torch.optim.Adam(opt.parameters(), lr=self.lr)

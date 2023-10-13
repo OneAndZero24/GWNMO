@@ -51,7 +51,7 @@ def _setup_arg_parser():
     parser.add_argument('--offline', action='store_true', help='No logging to neptune')
     parser.add_argument('--lr', type=float, default=0.01, required=False, help='Learning rate')
     parser.add_argument("--gamma", type=float, default=0.01, required=False, help='Gamma')
-    parser.add_argument('--nonorm', action='store_true', help='Normalization in GWNMO')
+    parser.add_argument('--nonorm', action='store_true', help='Normalization in GWNMO/HG in fs & classic')
 
     subparsers = parser.add_subparsers(title='mode', dest='mode', help='Learning paradigm selection', required=True)
     

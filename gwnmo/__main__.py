@@ -23,7 +23,7 @@ if args.mode == 'classic':
     if Module == GWNMO:
         module = Module(args.lr, args.gamma, not args.nonorm)
     elif Module == HyperGrad:
-        module = Module(args.lr, args.gamma)
+        module = Module(args.lr, args.gamma, not args.nonorm)
     else:
         module = Module(args.lr)
 
