@@ -37,3 +37,5 @@ else:
     logger.log_model_summary(module)
 
     train_twostep(dataset_gen(args.ways, args.shots), args.epochs, module)
+
+# TODO test after changes (hg normalization, omniglot fs, new metrics logging)

@@ -16,7 +16,9 @@ class GWNMOFS(FSModuleABC):
     GWNMOFS - Few Shot training algorithm based on GWNMO.
     """
 
-    def __init__(self, lr1: float = 0.01, lr2: float = 0.01, gm: float = 0.001, normalize: bool = True, adaptation_steps: int = 1, ways: int = 1, shots: int = 5, target: nn.Module = Target()):
+    def __init__(self, lr1: float = 0.01, lr2: float = 0.01, gm: float = 0.001,
+                normalize: bool = True, adaptation_steps: int = 1, ways: int = 1,
+                shots: int = 5, target: nn.Module = Target()):
         super(GWNMOFS, self).__init__()
 
         self.MO = MetaOptimizer().to(device)

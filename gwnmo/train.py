@@ -23,8 +23,8 @@ def test(module: ModuleABC, test_loader, epoch: int):
         test_error /= len(test_loader)
         test_accuracy /= len(test_loader)
     logger.log_metrics({
-        "accuracy": test_accuracy,
-        "loss": test_error
+        "test/accuracy": test_accuracy,
+        "test/loss": test_error
         }, epoch)
 
 
@@ -50,13 +50,21 @@ def train(dataset, epochs: int, reps: int, module: ModuleABC):
 
         for I in range(epochs):
             module.target.train()
+
+            train_error = 0.0
+            train_accuracy = 0.0
+
             for i, (X, y) in enumerate(train_loader):
                 X, y = X.to(device), y.to(device)
 
                 for opt in reversed(opts):
                     opt.zero_grad()
 
-                x_embd, _, err = module.training_step((X, y), i)
+                x_embd, preds, err = module.training_step((X, y), i)
+
+                train_error += err
+                train_accuracy += accuracy(preds, y)
+
                 err.backward(retain_graph=True)
 
                 if i > 0:
@@ -64,7 +72,14 @@ def train(dataset, epochs: int, reps: int, module: ModuleABC):
 
                 if len(opts) > 1:
                     opts[0].step(x_embd)    # ADJUST TARGET WITH WEIGHTED GRAD
-            
+
+            train_error /= len(train_loader)
+            train_accuracy /= len(train_loader)
+            logger.log_metrics({
+            "train/accuracy": train_accuracy,
+            "train/loss": train_error
+            }, I)
+
             test(module, test_loader, I)
 
         state = module.get_state(opts[0])

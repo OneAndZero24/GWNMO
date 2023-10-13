@@ -24,8 +24,8 @@ def test(module: FSModuleABC, test_loader, epoch: int):
         test_error /= len(test_loader)
         test_accuracy /= len(test_loader)
     logger.log_metrics({
-        "accuracy": test_accuracy,
-        "loss": test_error
+        "test/accuracy": test_accuracy,
+        "test/loss": test_error
         }, epoch)
 
 
@@ -45,15 +45,26 @@ def train(dataset, epochs: int, module: FSModuleABC):
 
     for I in range(epochs):
         module.target.train()
+
+        train_error = 0.0
+
         for i, batch in enumerate(train_loader):
             for opt in opts:
                 opt.zero_grad()
 
-                x_embd, _, err = module.training_step(batch, i)
+                _, preds, err = module.training_step(batch, i)
+
+                train_error += err
+
                 err.backward(retain_graph=True)
 
             for opt in opts:
                 opt.step()
+
+        train_error /= len(train_loader)
+        logger.log_metrics({
+        "train/loss": train_error
+        }, I)
 
         test(module, test_loader, I)
 
