@@ -1,4 +1,4 @@
-from utils import parser, map2cmd, logger
+from utils import parser, map2cmd, logger, neptune_online
 
 from modules.classic.adam import Adam
 from modules.classic.gwnmo import GWNMO
@@ -10,6 +10,9 @@ from train import train
 from trainfs import train as train_twostep
 
 args = parser.parse_args()
+
+if args.offline == False:
+    neptune_online()
 
 logger.tag(args)
 

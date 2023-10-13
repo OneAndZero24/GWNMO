@@ -5,6 +5,7 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torchvision.models import ResNet18_Weights
 import learn2learn as l2l
+from learn2learn.data.transforms import NWays, KShots, LoadData, RemapLabels, ConsecutiveLabels
 
 _kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
 DATASET_DIR = os.getenv('DATASET_DIR')
@@ -105,13 +106,19 @@ def setup_FS_Omniglot(ways: int, shots: int):
     `(taskset.train, taskset.test)`
     """
 
-    tasksets = l2l.vision.benchmarks.get_tasksets(
-        'omniglot',
-        train_ways=ways,
-        train_samples=shots,
-        test_ways=ways,
-        test_samples=shots,
-        root=DATASET_DIR,
-    )
+    trans = transforms.Compose([        
+        transforms.Lambda(lambda x: x.repeat(3, 1, 1)),
+        transforms.ToTensor(),
+        ResNet18_Weights.DEFAULT.transforms(antialias=True) 
+    ]) 
+    dataset = l2l.vision.datasets.FullOmniglot(root=DATASET_DIR, transform=trans, download=True)
+    metadataset = l2l.data.MetaDataset(dataset)
+    fs_trans = [
+        NWays(metadataset, ways),
+        KShots(metadataset, shots),
+        LoadData(metadataset),
+        ConsecutiveLabels(metadataset),
+    ]
+    tasksets = l2l.data.TaskDataset(dataset=fs_trans, task_transforms=transforms, num_tasks=-1)
 
     return (tasksets.train, tasksets.test)

@@ -93,7 +93,7 @@ class GWNMOFS(FSModuleABC):
         Returns `preds` & `err`
         """
 
-        split = split_batch(batch, self.ways, self.shots)
+        split = split_batch(batch)
         adapt_X, adapt_y = split['adapt']
         eval_X, eval_y = split['eval']
 

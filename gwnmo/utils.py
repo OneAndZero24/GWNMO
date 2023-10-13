@@ -16,7 +16,7 @@ def accuracy(predictions, targets):
     return (predictions == targets).sum().float() / targets.size(0)
 
 
-def split_batch(batch, ways: int, shots: int):
+def split_batch(batch):
     """
     Splits batch into adapt and eval parts.
     Returns dict of tuples (data, labels) indexed by 'adapt', 'eval'.
@@ -25,8 +25,10 @@ def split_batch(batch, ways: int, shots: int):
     X, y = batch
     X, y = X.to(device), y.to(device)
 
-    adapt_indices = np.zeros(X.size(0), dtype=bool)
-    adapt_indices[np.arange(shots*ways) * 2] = True
+    size = X.size(0)
+
+    adapt_indices = np.zeros(size, dtype=bool)
+    adapt_indices[np.arange(size//2) * 2] = True
     eval_indices = torch.from_numpy(~adapt_indices)
     adapt_indices = torch.from_numpy(adapt_indices)
     adapt_X, adapt_y = X[adapt_indices], y[adapt_indices]
@@ -46,6 +48,7 @@ def _setup_arg_parser():
     parser = argparse.ArgumentParser(prog='gwnmo')
 
     parser.add_argument('epochs', type=int, help='Number of epochs to train for')
+    parser.add_argument('--offline', action='store_true', help='No logging to neptune')
     parser.add_argument('--lr', type=float, default=0.01, required=False, help='Learning rate')
     parser.add_argument("--gamma", type=float, default=0.01, required=False, help='Gamma')
     parser.add_argument('--nonorm', action='store_true', help='Normalization in GWNMO')
@@ -70,7 +73,10 @@ def _setup_arg_parser():
 parser = _setup_arg_parser()    # Global argument parser
 
 
-logger = NeptuneLogger()
+logger = NeptuneLogger(False)
+
+def neptune_online():
+    logger = NeptuneLogger(True)
 
 
 def _setup_torch():

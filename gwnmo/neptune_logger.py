@@ -1,3 +1,4 @@
+import time
 import neptune
 
 from lightning.pytorch.loggers.logger import Logger
@@ -11,9 +12,19 @@ class NeptuneLogger(Logger):
     Custom, simplistic neptune logger for Lightning due to `neptune` vs `neptune-client` problems.
     """
 
-    def __init__(self):
+    def __init__(self, online: bool):
         super(NeptuneLogger, self).__init__()
-        self.run = neptune.init_run()
+        self.output = self.print_to_term
+        if online:
+            self.run = neptune.init_run()
+            self.output = self.push_to_neptune
+
+    def print_to_term(self, key, value):
+        clock = time.strftime("%H:%M:%S", time.localtime(time.time()))
+        print(f'[{clock}] {key}: {value}')
+
+    def push_to_neptune(self, key, value):
+        self.run[key].append(value)
 
     @property
     def name(self):
@@ -29,12 +40,12 @@ class NeptuneLogger(Logger):
 
     @rank_zero_only
     def log_hyperparams(self, params):
-        self.run["params"].append(params)
+        self.output('params', params)
 
     @rank_zero_only
     def log_metrics(self, metrics, step):
         for key, value in metrics.items():
-            self.run[key].append(value)
+            self.output(key, value)
 
     def tag(self, args):
         """
@@ -43,7 +54,7 @@ class NeptuneLogger(Logger):
 
         tags = [ k+': '+str(v) for (k, v) in list(vars(args).items()) ]
         tags.append(__version__)
-        self.run["sys/tags"].add(tags)
+        self.output('sys/tags', tags)
 
     def log_model_summary(self, module):
         """
@@ -51,4 +62,4 @@ class NeptuneLogger(Logger):
         """
 
         for attr, value in module.__dict__['_modules'].items():
-            self.run['model_summary'].append(str(value))
+            self.output('model_summary', str(value))
