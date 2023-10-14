@@ -1,4 +1,4 @@
-from utils import parser, map2cmd, logger, neptune_online
+from utils import device, parser, map2cmd, logger, neptune_online
 
 from modules.classic.adam import Adam
 from modules.classic.gwnmo import GWNMO
@@ -36,6 +36,6 @@ else:
 
     logger.log_model_summary(module)
 
-    train_twostep(dataset_gen(args.ways, args.shots), args.epochs, module)
+    train_twostep(dataset_gen(device, args.ways, args.shots), args.epochs, module)
 
 # TODO test after changes (hg normalization, omniglot fs, new metrics logging)

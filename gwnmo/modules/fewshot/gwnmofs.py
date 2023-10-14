@@ -2,10 +2,11 @@ import torch
 from torch import nn
 
 from learn2learn.utils import clone_module
+from learn2learn.data.utils import partition_task
 
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
-from utils import device, split_batch
+from utils import device 
 from models.target import Target
 from models.feat_ex import FeatEx
 from models.meta_opt import MetaOptimizer
@@ -95,9 +96,8 @@ class GWNMOFS(FSModuleABC):
         Returns `preds` & `err`
         """
 
-        split = split_batch(batch)
-        adapt_X, adapt_y = split['adapt']
-        eval_X, eval_y = split['eval']
+        X, y = batch
+        (adapt_X, adapt_y), (eval_X, eval_y) = partition_task(X, y, shots=self.shots)
 
         adapt_X_embd = torch.reshape(self.FE(adapt_X), (-1, 512))
         eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 512))

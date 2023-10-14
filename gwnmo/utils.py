@@ -5,7 +5,7 @@ import torch
 
 from __init__ import __version__
 from neptune_logger import NeptuneLogger
-from datasets import *
+from gwnmo.datasets import *
 
 
 def normalize_weighting(x, grad):
@@ -25,30 +25,6 @@ def accuracy(predictions, targets):
     """
     predictions = predictions.argmax(dim=1).view(targets.shape)
     return (predictions == targets).sum().float() / targets.size(0)
-
-
-def split_batch(batch):
-    """
-    Splits batch into adapt and eval parts.
-    Returns dict of tuples (data, labels) indexed by 'adapt', 'eval'.
-    """
-
-    X, y = batch
-    X, y = X.to(device), y.to(device)
-
-    size = X.size(0)
-
-    adapt_indices = np.zeros(size, dtype=bool)
-    adapt_indices[np.arange(size//2) * 2] = True
-    eval_indices = torch.from_numpy(~adapt_indices)
-    adapt_indices = torch.from_numpy(adapt_indices)
-    adapt_X, adapt_y = X[adapt_indices], y[adapt_indices]
-    eval_X, eval_y = X[eval_indices], y[eval_indices]
-
-    return {
-        'adapt': (adapt_X, adapt_y),
-        'eval': (eval_X, eval_y)
-    }
 
 
 def _setup_arg_parser():
