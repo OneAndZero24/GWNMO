@@ -24,7 +24,13 @@ class NeptuneLogger(Logger):
         print(f'[{clock}] {key}: {value}')
 
     def push_to_neptune(self, key, value):
-        self.run[key].append(value)
+    # WARNING: Handle with care as it's dependent on keys
+        if key == "sys/tags":
+            self.run[key].add(value)
+        elif key in {"test/loss", "test/accuracy", "train/loss", "train/accuracy"}:
+            self.run[key].append(value)
+        else:
+            self.run[key] = value
 
     @property
     def name(self):
