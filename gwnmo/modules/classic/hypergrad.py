@@ -15,11 +15,15 @@ def gen_hypergrad_transform(normalize: bool = False):
     Generates Hypergrad Transform class
     """
 
-    def nonorm(self, grad):
-        return self.lr * grad
+    def nonorm(self):
+        def forward(grad):
+            return self.lr * grad
+        return forward
 
-    def norm(self, grad):
-        return normalize_weighting(self.lr, grad)
+    def norm(self):
+        def forward(grad):
+            return normalize_weighting(self.lr, grad)
+        return forward
 
     choice = norm if normalize else nonorm
 
@@ -33,7 +37,7 @@ def gen_hypergrad_transform(normalize: bool = False):
 
             self.lr = lr * torch.ones_like(param, requires_grad=True)
             self.lr = nn.Parameter(self.lr)
-            self.forward = choice
+            self.forward = choice(self)
 
     return HypergradTransform
 
