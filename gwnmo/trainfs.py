@@ -23,7 +23,7 @@ def test(module: FSModuleABC, test_loader, epoch: int):
             test_accuracy += accuracy(preds, y)
         test_error /= len(test_loader)
         test_accuracy /= len(test_loader)
-    logger.log_metrics({
+    logger.get().log_metrics({
         "test/accuracy": test_accuracy,
         "test/loss": test_error
         }, epoch)
@@ -62,7 +62,7 @@ def train(dataset, epochs: int, module: FSModuleABC):
                 opt.step()
 
         train_error /= len(train_loader)
-        logger.log_metrics({
+        logger.get().log_metrics({
         "train/loss": train_error
         }, I)
 

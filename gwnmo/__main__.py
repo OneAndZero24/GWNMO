@@ -13,9 +13,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.offline == False:
-        logger = neptune_online()
+        logger.toggle_online()
 
-    logger.tag(args)
+    logger.get().tag(args)
 
     dataset_gen = map2cmd['dataset'][args.dataset]
     Module = map2cmd['module'][args.module]
@@ -28,13 +28,13 @@ if __name__ == '__main__':
         else:
             module = Module(args.lr)
 
-        logger.log_model_summary(module)
+        logger.get().log_model_summary(module)
 
         train(dataset_gen(), args.epochs, args.reps, module)
     else:
         if Module == GWNMOFS:
             module = Module(args.lr, args.lr2, args.gamma, not args.nonorm, args.steps, args.ways, args.shots)
 
-        logger.log_model_summary(module)
+        logger.get().log_model_summary(module)
 
         train_twostep(dataset_gen(device, args.ways, args.shots), args.epochs, module)

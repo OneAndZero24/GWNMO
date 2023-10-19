@@ -8,6 +8,15 @@ from neptune_logger import NeptuneLogger
 from datasets import *
 
 
+# Singleton boilerplate
+class Singleton(type):
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
 def normalize_weighting(x, grad):
     """
     Permforms magical normalization described in PDF given meta optimizer's network output and gradient
@@ -60,10 +69,17 @@ def _setup_arg_parser():
 parser = _setup_arg_parser()    # Global argument parser
 
 
-logger = NeptuneLogger(False)
+class LoggerHandler(metaclass=Singleton):
+    def __init__(self):
+        self.logger = NeptuneLogger(False)
 
-def neptune_online():
-    return NeptuneLogger(True)
+    def toggle_online(self):
+        self.logger = NeptuneLogger(True)
+
+    def get(self):
+        return self.logger
+    
+logger = LoggerHandler()
 
 
 def _setup_torch():
