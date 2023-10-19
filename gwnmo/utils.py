@@ -5,7 +5,7 @@ import torch
 
 from __init__ import __version__
 from neptune_logger import NeptuneLogger
-from gwnmo.datasets import *
+from datasets import *
 
 
 def normalize_weighting(x, grad):
