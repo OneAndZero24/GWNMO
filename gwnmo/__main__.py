@@ -13,7 +13,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.offline == False:
-        neptune_online()
+        logger = neptune_online()
 
     logger.tag(args)
 

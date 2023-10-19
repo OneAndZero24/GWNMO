@@ -63,7 +63,7 @@ parser = _setup_arg_parser()    # Global argument parser
 logger = NeptuneLogger(False)
 
 def neptune_online():
-    logger = NeptuneLogger(True)
+    return NeptuneLogger(True)
 
 
 def _setup_torch():
