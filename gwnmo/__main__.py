@@ -1,5 +1,4 @@
-from utils import device, parser, map2cmd, logger, neptune_online
-
+from utils import device, parser, map2cmd, logger
 from modules.classic.adam import Adam
 from modules.classic.gwnmo import GWNMO
 from modules.classic.hypergrad import HyperGrad
