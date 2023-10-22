@@ -1,5 +1,6 @@
 # Gradient Weighting by Neural Meta Optimizer
 *Jan Miksa* @ GMUM Jagiellonian University
+*Mateusz Rajski* @ GMUM Jagiellonian University
 
 Meta-learning method inspired by hypergradient methods and earlier works of using neural networs to control training process of others.  
 Uses a neural netowrk to "weight" target network's gradient during descent.
