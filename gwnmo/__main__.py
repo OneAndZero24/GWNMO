@@ -20,9 +20,7 @@ if __name__ == '__main__':
     Module = map2cmd['module'][args.module]
 
     if args.mode == 'classic':
-        if Module == GWNMO:
-            module = Module(args.lr, args.gamma, not args.nonorm)
-        elif Module == HyperGrad:
+        if Module in {GWNMO, HyperGrad}:
             module = Module(args.lr, args.gamma, not args.nonorm)
         else:
             module = Module(args.lr)

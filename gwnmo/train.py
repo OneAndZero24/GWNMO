@@ -67,7 +67,7 @@ def train(dataset, epochs: int, reps: int, module: ModuleABC):
 
                 err.backward(retain_graph=True)
 
-                if i > 0:
+                if (i > 0) and (len(opts) > 1):
                     opts[-1].step()     # ADJUST WEIGTING NETWORK
 
                 if len(opts) > 1:
