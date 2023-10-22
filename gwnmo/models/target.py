@@ -27,20 +27,21 @@ class ScallableTarget(nn.Module):
     Target network that scales it's output size based on number of classes.
     """
 
-    def __init__(self, classes):
-        super(Target, self).__init__()
+    def __init__(self, classes: int):
+        super(ScallableTarget, self).__init__()
 
         self.seq = nn.Sequential()
-        for i in range(6, 10):
+        for i in range(9, 5, -1):
             p = 2**i
             if classes > p:
-                self.seq.append
+                self.seq.append(nn.Linear(p, classes))
                 break
             else:
-                # TODO
-        self.seq.append(nn.Linear(512, 64))
-        self.seq.append(nn.ReLU())
-        self.seq.append(nn.Linear(64, 10))
+                if i-1 > 5:
+                    self.seq.append(nn.Linear(p, p//2))
+                    self.seq.append(nn.ReLU())
+                else:
+                    self.seq.append(nn.Linear(p, classes))
 
     def forward(self, x: torch.Tensor):
         x = self.seq(x)

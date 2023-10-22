@@ -6,8 +6,9 @@ from learn2learn.data.utils import partition_task
 
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
+from datasets import OMNIGLOT_CLASSES
 from utils import device 
-from models.target import Target
+from models.target import ScallableTarget
 from models.feat_ex import FeatEx
 from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
@@ -19,7 +20,7 @@ class GWNMOFS(FSModuleABC):
 
     def __init__(self, lr1: float = 0.01, lr2: float = 0.01, gm: float = 0.001,
                 normalize: bool = True, adaptation_steps: int = 1, ways: int = 1,
-                shots: int = 5, target: nn.Module = Target()):
+                shots: int = 5, target: nn.Module = ScallableTarget(OMNIGLOT_CLASSES)):
         super(GWNMOFS, self).__init__()
 
         self.MO = MetaOptimizer().to(device)
@@ -53,7 +54,7 @@ class GWNMOFS(FSModuleABC):
         Reinitializes target model
         """
 
-        self._target = Target().to(device)
+        self._target = ScallableTarget(OMNIGLOT_CLASSES).to(device)
 
     def get_state(self, opt):
         """
