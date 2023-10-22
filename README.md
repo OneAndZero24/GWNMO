@@ -2,8 +2,8 @@
 *Jan Miksa* @ GMUM Jagiellonian University  
 *Mateusz Rajski* @ GMUM Jagiellonian University
 
-Meta-learning method inspired by hypergradient methods and earlier works of using neural networs to control training process of others.  
-Uses a neural netowrk to "weight" target network's gradient during descent.
+Meta-learning method inspired by hypergradient methods and earlier works of using neural network to control training process of others.  
+Uses a neural network to "weight" target network's gradient during descent.
 
 *Work in progress...*
 
