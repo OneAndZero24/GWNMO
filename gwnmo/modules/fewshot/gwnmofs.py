@@ -23,7 +23,7 @@ class GWNMOFS(FSModuleABC):
                 shots: int = 5, target: nn.Module = ScallableTarget(OMNIGLOT_CLASSES)):
         super(GWNMOFS, self).__init__()
 
-        self.MO = MetaOptimizer().to(device)
+        self.MO = MetaOptimizer(insize=1672878, outsize=832599).to(device)
         self.MO.train()
 
         self.FE = FeatEx().to(device)
@@ -104,8 +104,8 @@ class GWNMOFS(FSModuleABC):
         eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 512))
 
         c = self.clone()
+        c.opt.zero_grad()
         for i in range(self.adaptation_steps):
-            c.opt.zero_grad()
             preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
 
         err = self.loss(preds, eval_y)
@@ -116,6 +116,13 @@ class GWNMOFS(FSModuleABC):
         """
         Sets-up & returns proper optimizers alpha & start
         """
+
+        self.opt = GWNMOopt(
+            model=self.target, 
+            transform=self.MO, 
+            gamma=self.gamma, 
+            normalize=self.normalize
+        ).to(device)
 
         adam1 = torch.optim.Adam(self.opt.parameters(), lr=self.lr1)
         adam2 = torch.optim.Adam(self.target.parameters(), lr=self.lr2)

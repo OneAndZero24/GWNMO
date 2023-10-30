@@ -86,7 +86,9 @@ def _setup_torch():
     """
     Sets `torch` up, returns device
     """
-
+    
+    torch.autograd.set_detect_anomaly(True)
+    
     torch.manual_seed(1)
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
