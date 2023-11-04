@@ -106,7 +106,7 @@ class GWNMOFS(FSModuleABC):
         c = self.clone()
         c.opt.zero_grad()
         for i in range(self.adaptation_steps):
-            preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
+            preds = c.adapt(adapt_X_embd, adapt_y, eval_X_embd)
 
         err = self.loss(preds, eval_y)
 
