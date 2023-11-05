@@ -100,6 +100,8 @@ class GWNMOFS(FSModuleABC):
         X, y = batch
         (adapt_X, adapt_y), (eval_X, eval_y) = partition_task(X, y, shots=self.shots)
 
+        adapt_X, adapt_y, eval_X, eval_y = adapt_X.to(device), adapt_y.to(device), eval_X.to(device), eval_y.to(device)
+
         adapt_X_embd = torch.reshape(self.FE(adapt_X), (-1, 512))
         eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 512))
 
