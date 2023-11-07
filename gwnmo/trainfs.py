@@ -52,11 +52,11 @@ def train(dataset, epochs: int, module: FSModuleABC):
             for opt in opts:
                 opt.zero_grad()
 
-                _, preds, err = module.training_step(batch, i)
+            _, preds, err = module.training_step(batch, i)
 
-                train_error += err
+            train_error += err
 
-                err.backward(retain_graph=True)
+            err.backward(retain_graph=True)
 
             for opt in opts:
                 opt.step()
