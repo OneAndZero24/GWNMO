@@ -16,10 +16,9 @@
 - **few-shot**
     - ~~implement~~
     - ~~DEBUG~~
-    - *fix few-shot dataset load - 5 classes network output*
-    - *fix target architecture*
-    - *grad FE learning along with target, average pooling on weights/grads*
-    - gwnmofs clone target or meta-opt?
+    - *fix few-shot - ways classes target output*
+    - *check gwnmofs training_step*
+    - grad FE learning along with target, average pooling on weights/grads?
     - check differentation in torchviz
 - **compare to tables from prev paper crosschar**
     - **implement same architecture**
