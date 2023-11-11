@@ -13,15 +13,14 @@
 - ~~HG normalization CIFAR10 grid~~
 
 ## Few-Shot
-- **few-shot**
+- ~~few-shot~~
     - ~~implement~~
     - ~~DEBUG~~
-    - *fix few-shot - ways classes target output*
-    - *check gwnmofs training_step*
-    - grad FE learning along with target, average pooling on weights/grads?
-    - check differentation in torchviz
+    - ~~fix few-shot - ways classes target output~~
+    - ~~check gwnmofs training_step~~
+    - ~~check differentation in torchviz~~
 - **compare to tables from prev paper crosschar**
-    - **implement same architecture**
+    - *implement same architecture* Mati
     - grids
 - extend
     - MetaSGD/MAML
@@ -37,6 +36,7 @@
 ## Further
 - **attention on optimizer steps**
 - **metaoptimizer architecture**
+    - **grad FE learning along with target, average pooling on weights/grads**
     - **self attention on grad**
     - bigger/other architectures
 - model-parallelization that would allow for bigger models  

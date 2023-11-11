@@ -10,6 +10,11 @@ class MetaOptimizer(nn.Module):
     """
 
     def __init__(self, insize=CLASSIC_10CLASS_IN_SIZE, outsize=CLASSIC_10CLASS_WEIGHTS_SIZE):
+        """
+        insize - concat(param_vals, grad, x_embd)
+        outsize - grad
+        """
+
         super(MetaOptimizer, self).__init__()
         self.seq = nn.Sequential()
         self.seq.append(nn.Linear(insize, 128))

@@ -9,9 +9,5 @@ class FSModuleABC(ModuleABC, metaclass = ABCMeta):
     """
 
     @abstractmethod
-    def clone(self):
-        ...
-
-    @abstractmethod
     def adapt(self, adapt_X_embd, adapt_y, eval_X_embd):
         ...
