@@ -5,7 +5,7 @@ from modules.module_abc import ModuleABC
 
 from utils import device
 from models.target import Target
-from models.feat_ex import FeatEx
+from models.feature_extractor import FeatureExtractor
 
 
 class Adam(ModuleABC):
@@ -18,7 +18,7 @@ class Adam(ModuleABC):
 
         self.state = None   # For repetitions
 
-        self.FE = FeatEx().to(device)
+        self.FE = FeatureExtractor().to(device)
         self._target = Target().to(device)
         self.loss = nn.NLLLoss()
 

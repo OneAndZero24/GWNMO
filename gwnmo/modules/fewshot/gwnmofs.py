@@ -8,7 +8,7 @@ from modules.fewshot.fsmodule_abc import FSModuleABC
 
 from utils import device 
 from models.target import Target
-from models.feat_ex import FeatEx
+from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
 from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
 
@@ -17,15 +17,30 @@ class GWNMOFS(FSModuleABC):
     GWNMOFS - Few Shot training algorithm based on GWNMO.
     """
 
-    def __init__(self, lr1: float = 0.01, lr2: float = 0.01, gm: float = 0.001,
-                normalize: bool = True, adaptation_steps: int = 1, ways: int = 1,
-                shots: int = 5, target: nn.Module = Target()):
+    def __init__(self, 
+                 lr1: float = 0.01, 
+                 lr2: float = 0.01, 
+                 gm: float = 0.001,
+                 normalize: bool = True, 
+                 adaptation_steps: int = 1, 
+                 ways: int = 1,
+                 shots: int = 5, 
+                 target: nn.Module = Target(), 
+                 trainable_fe: bool = False, 
+                 feature_extractor_backbone = None
+        ):
         super(GWNMOFS, self).__init__()
 
         self.MO = MetaOptimizer().to(device)
         self.MO.train()
 
-        self.FE = FeatEx().to(device)
+        
+        if not trainable_fe:
+            print("Using non-trainable FeatureExtractor")
+            self.FE = FeatureExtractor().to(device)
+        else:
+            print("Using TrainableFeatureExtractor")
+            self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
         self._target = target.to(device)
         self.loss = nn.NLLLoss()
 
@@ -99,9 +114,8 @@ class GWNMOFS(FSModuleABC):
         X, y = batch
         (adapt_X, adapt_y), (eval_X, eval_y) = partition_task(X, y, shots=self.shots)
 
-        adapt_X_embd = torch.reshape(self.FE(adapt_X), (-1, 512))
-        eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 512))
-
+        adapt_X_embd = torch.reshape(self.FE(adapt_X.to(device=device)), (-1, 512))
+        eval_X_embd = torch.reshape(self.FE(eval_X.to(device=device)), (-1, 512))
         c = self.clone()
         for i in range(self.adaptation_steps):
             c.opt.zero_grad()

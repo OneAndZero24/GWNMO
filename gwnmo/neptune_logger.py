@@ -16,7 +16,10 @@ class NeptuneLogger(Logger):
         super(NeptuneLogger, self).__init__()
         self.output = self.print_to_term
         if online:
-            self.run = neptune.init_run()
+            try:
+                self.run = neptune.init_run()
+            except:
+                pass
             self.output = self.push_to_neptune
 
     def print_to_term(self, key, value):
@@ -24,13 +27,16 @@ class NeptuneLogger(Logger):
         print(f'[{clock}] {key}: {value}')
 
     def push_to_neptune(self, key, value):
+        try:
     # WARNING: Handle with care as it's dependent on keys
-        if key == "sys/tags":
-            self.run[key].add(value)
-        elif key in {"test/loss", "test/accuracy", "train/loss", "train/accuracy"}:
-            self.run[key].append(value)
-        else:
-            self.run[key] = value
+            if key == "sys/tags":
+                self.run[key].add(value)
+            elif key in {"test/loss", "test/accuracy", "train/loss", "train/accuracy"}:
+                self.run[key].append(value)
+            else:
+                self.run[key] = value
+        except:
+            pass
 
     @property
     def name(self):

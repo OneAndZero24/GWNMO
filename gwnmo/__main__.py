@@ -30,7 +30,7 @@ if __name__ == '__main__':
         train(dataset_gen(), args.epochs, args.reps, module)
     else:
         if Module == GWNMOFS:
-            module = Module(args.lr, args.lr2, args.gamma, not args.nonorm, args.steps, args.ways, args.shots)
+            module = Module(args.lr, args.lr2, args.gamma, not args.nonorm, args.steps, args.ways, args.shots, trainable_fe = args.trainable_fe, feature_extractor_backbone=args.backbone_type)
 
         logger.get().log_model_summary(module)
 

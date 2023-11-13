@@ -6,7 +6,7 @@ import torch.nn.functional as F
 class Target(nn.Module):
     """
     Target network to be trained.
-    Works on data processed by feature extractor (output of `FeatEx`)
+    Works on data processed by feature extractor (output of `FeatureExtractor`)
     """
 
     def __init__(self):
@@ -38,6 +38,7 @@ class ScallableTarget(nn.Module):
                 break
             else:
                 # TODO
+                pass
         self.seq.append(nn.Linear(512, 64))
         self.seq.append(nn.ReLU())
         self.seq.append(nn.Linear(64, 10))

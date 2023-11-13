@@ -5,7 +5,7 @@ from modules.module_abc import ModuleABC
 
 from utils import device
 from models.target import Target
-from models.feat_ex import FeatEx
+from models.feature_extractor import FeatureExtractor
 from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
 
@@ -21,7 +21,7 @@ class GWNMO(ModuleABC):
         self.MO = MetaOptimizer().to(device)
         self.MO.train()
 
-        self.FE = FeatEx().to(device)
+        self.FE = FeatureExtractor().to(device)
         self._target = Target().to(device)
         self.loss = nn.NLLLoss()
         
