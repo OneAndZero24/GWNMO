@@ -61,7 +61,7 @@ def _setup_arg_parser():
     parser_fs.add_argument("--dataset", choices=['omniglot'], required=True, default='omniglot', help='Dataset selection')
     parser_fs.add_argument("--module", choices=['gwnmofs', 'metasgd', 'maml'], required=True, default='gwnmofs', help='Module selection')
     parser_fs.add_argument('--lr2', type=float, default=0.01, required=False, help='Secondary learning rate')
-    parser_fs.add_argument('--ways', type=int, default=15, required=False, help='Number of classes in task')
+    parser_fs.add_argument('--ways', type=int, default=5, required=False, help='Number of classes in task')
     parser_fs.add_argument('--shots', type=int, default=1, required=False, help='Number of class examples')
     parser_fs.add_argument('--steps', type=int, default=1, required=False, help='Number of adaptation steps.')
     parser_fs.add_argument('--trainable_fe', type=bool, default=False, required=False, help="Tells if model should use trainable backbone")
@@ -89,7 +89,9 @@ def _setup_torch():
     """
     Sets `torch` up, returns device
     """
-
+    
+    torch.autograd.set_detect_anomaly(True)
+    
     torch.manual_seed(1)
     device_name = "cuda" if torch.cuda.is_available() else "cpu"
     logger.get().print_to_term("torch_device", device_name)

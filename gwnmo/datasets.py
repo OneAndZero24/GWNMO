@@ -101,6 +101,8 @@ def setup_SVHN(batch_size: int = 32):
 
     return (train_loader, test_loader)
 
+OMNIGLOT_CLASSES = 1623
+
 def setup_FS_Omniglot(device, ways: int, shots: int):
     """
     Returns properly setup Omniglot Taskset:
@@ -114,7 +116,7 @@ def setup_FS_Omniglot(device, ways: int, shots: int):
     ]) 
     dataset = l2l.vision.datasets.FullOmniglot(root=DATASET_DIR, transform=trans, download=True)
 
-    classes = list(range(1623))
+    classes = list(range(OMNIGLOT_CLASSES))
     random.shuffle(classes)
     train_dataset = l2l.data.FilteredMetaDataset(dataset, labels=classes[:1100])
     test_dataset = l2l.data.FilteredMetaDataset(dataset, labels=classes[1100:])
@@ -123,12 +125,14 @@ def setup_FS_Omniglot(device, ways: int, shots: int):
         NWays(train_dataset, ways),
         KShots(train_dataset, shots),
         LoadData(train_dataset),
+        RemapLabels(train_dataset),
         ConsecutiveLabels(train_dataset),
     ]
     test_fs_trans = [
         NWays(test_dataset, ways),
         KShots(test_dataset, shots),
         LoadData(test_dataset),
+        RemapLabels(test_dataset),
         ConsecutiveLabels(test_dataset),
     ]
 

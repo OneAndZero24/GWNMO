@@ -1,5 +1,4 @@
 import torch
-import learn2learn as l2l
 
 from modules.fewshot.fsmodule_abc import FSModuleABC
 from utils import device, logger, accuracy
@@ -47,22 +46,26 @@ def train(dataset, epochs: int, module: FSModuleABC):
         module.target.train()
 
         train_error = 0.0
+        train_accuracy = 0.0
 
         for i, batch in enumerate(train_loader):
             for opt in opts:
                 opt.zero_grad()
 
-                _, preds, err = module.training_step(batch, i)
+            y, preds, err = module.training_step(batch, i)
 
-                train_error += err
+            train_error += err
+            train_accuracy += accuracy(preds, y)
 
-                err.backward(retain_graph=True)
-
+            err.backward(retain_graph=True)
+            
             for opt in opts:
                 opt.step()
 
         train_error /= len(train_loader)
+        train_accuracy /= len(train_loader)
         logger.get().log_metrics({
+        "train/accuracy": train_accuracy,
         "train/loss": train_error
         }, I)
 

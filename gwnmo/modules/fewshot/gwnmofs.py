@@ -1,13 +1,13 @@
 import torch
 from torch import nn
 
-from learn2learn.utils import clone_module
+from learn2learn.utils import detach_module
 from learn2learn.data.utils import partition_task
 
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
 from utils import device 
-from models.target import Target
+from models.target import ScallableTarget
 from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
 from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
@@ -52,6 +52,14 @@ class GWNMOFS(FSModuleABC):
         self.ways = ways
         self.shots = shots
 
+        self.reset_target()
+
+        self.MO = MetaOptimizer(insize=348170, outsize=172805).to(device)
+        self.MO.train()
+
+        self.FE = FeatEx().to(device)
+        self.loss = nn.NLLLoss()
+
         self.opt = GWNMOopt(
             model=self._target, 
             transform=self.MO, 
@@ -68,7 +76,7 @@ class GWNMOFS(FSModuleABC):
         Reinitializes target model
         """
 
-        self._target = Target().to(device)
+        self._target = ScallableTarget(self.ways).to(device)
 
     def get_state(self, opt):
         """
@@ -85,13 +93,6 @@ class GWNMOFS(FSModuleABC):
         self.MO = state
         self.MO.train()
 
-    def clone(self):
-        """
-        Create detached clone of target & wrap in self clone
-        """
-
-        return GWNMOFS(self.lr1, self.lr2, self.gamma, self.normalize, self.ways, self.shots, clone_module(self.target))
-    
     def adapt(self, adapt_X_embd, adapt_y, eval_X_embd):
         """
         Single GWNMOFS adaptation step
@@ -108,27 +109,37 @@ class GWNMOFS(FSModuleABC):
     def training_step(self, batch, batch_idx):
         """
         Single training step
-        Returns `preds` & `err`
+        Returns `evl_y`, `preds` & `err`
         """
 
         X, y = batch
         (adapt_X, adapt_y), (eval_X, eval_y) = partition_task(X, y, shots=self.shots)
 
-        adapt_X_embd = torch.reshape(self.FE(adapt_X.to(device=device)), (-1, 512))
-        eval_X_embd = torch.reshape(self.FE(eval_X.to(device=device)), (-1, 512))
-        c = self.clone()
+        adapt_X, adapt_y, eval_X, eval_y = adapt_X.to(device), adapt_y.to(device), eval_X.to(device), eval_y.to(device)
+
+        adapt_X_embd = torch.reshape(self.FE(adapt_X), (-1, 512))
+        eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 512))
+
+        detach_module(self.target, keep_requires_grad=True)
         for i in range(self.adaptation_steps):
-            c.opt.zero_grad()
+            self.opt.zero_grad()
             preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
 
         err = self.loss(preds, eval_y)
 
-        return (eval_X_embd, preds, err)
+        return (eval_y, preds, err)
     
     def configure_optimizers(self) -> list:
         """
         Sets-up & returns proper optimizers alpha & start
         """
+
+        self.opt = GWNMOopt(
+            model=self.target, 
+            transform=self.MO, 
+            gamma=self.gamma, 
+            normalize=self.normalize
+        ).to(device)
 
         adam1 = torch.optim.Adam(self.opt.parameters(), lr=self.lr1)
         adam2 = torch.optim.Adam(self.target.parameters(), lr=self.lr2)
