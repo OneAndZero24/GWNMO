@@ -25,7 +25,6 @@ class GWNMOFS(FSModuleABC):
                  adaptation_steps: int = 1, 
                  ways: int = 1,
                  shots: int = 5, 
-                 target: nn.Module = Target(), 
                  trainable_fe: bool = False, 
                  feature_extractor_backbone = None
         ):
@@ -41,7 +40,6 @@ class GWNMOFS(FSModuleABC):
         else:
             print("Using TrainableFeatureExtractor")
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
-        self._target = target.to(device)
         self.loss = nn.NLLLoss()
 
         self.lr1 = lr1
@@ -57,7 +55,6 @@ class GWNMOFS(FSModuleABC):
         self.MO = MetaOptimizer(insize=348170, outsize=172805).to(device)
         self.MO.train()
 
-        self.FE = FeatEx().to(device)
         self.loss = nn.NLLLoss()
 
         self.opt = GWNMOopt(

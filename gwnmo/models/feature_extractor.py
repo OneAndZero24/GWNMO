@@ -1,4 +1,5 @@
 from torch import nn
+import torch
 import torchvision as tv
 from .backbone import Conv4, Conv4Pool, Conv4S, Conv6, ResNet10, ResNet18, ResNet34, ResNet50, ResNet101, Conv4WithKernel, ResNetWithKernel
 from typing import Union, Literal
@@ -41,6 +42,9 @@ class FeatureExtractor(nn.Module):
         Input must have ResNet18 digestible format
         """
 
+        print(f"Input dim {x.shape}")
+        print(f"Output dim {self.model(x).shape}")
+        print(f"Output content {self.model(x)}")
         return self.model(x)
 
 
@@ -67,7 +71,14 @@ class TrainableFeatureExtractor(nn.Module):
                 ],
                 flatten = True
     ):
+        super(TrainableFeatureExtractor, self).__init__()
         self.model = feature_extractors[backbone_name](flatten=flatten)
     
     def forward(self, x):
-        return self.model(x)
+        if x.shape[0] == 0:
+            return x.reshape([0, 512, 1, 1])
+        print(f"Input dim {x.shape}")
+        output = self.model(x)
+        output = torch.reshape(self.model(x),(output.shape[0], output.shape[1], 1, 1))
+        print(f"Output dim {output.shape}")
+        return output
