@@ -11,7 +11,7 @@ from trainfs import train as train_twostep
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    if args.offline == False:
+    if args.offline == False and args.debugger != True:
         logger.toggle_online()
 
     logger.get().tag(args)

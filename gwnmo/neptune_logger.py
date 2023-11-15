@@ -14,10 +14,11 @@ class NeptuneLogger(Logger):
 
     def __init__(self, online: bool):
         super(NeptuneLogger, self).__init__()
-        self.output = self.print_to_term
         if online:
             self.run = neptune.init_run()
-        self.output = self.push_to_neptune
+            self.output = self.push_to_neptune
+        else:
+            self.output = self.print_to_term
 
     def print_to_term(self, key, value):
         clock = time.strftime("%H:%M:%S", time.localtime(time.time()))

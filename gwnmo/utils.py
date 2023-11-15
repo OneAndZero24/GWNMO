@@ -49,6 +49,7 @@ def _setup_arg_parser():
     parser.add_argument('--lr', type=float, default=0.01, required=False, help='Learning rate')
     parser.add_argument("--gamma", type=float, default=0.01, required=False, help='Gamma')
     parser.add_argument('--nonorm', action='store_true', help='Normalization in GWNMO/HG in fs & classic')
+    parser.add_argument('--debugger', action='store_true', help='Indicates debug run that won\'t be logged to neptune (use this in launch.json configurations)')
 
     subparsers = parser.add_subparsers(title='mode', dest='mode', help='Learning paradigm selection', required=True)
     
@@ -64,8 +65,8 @@ def _setup_arg_parser():
     parser_fs.add_argument('--ways', type=int, default=5, required=False, help='Number of classes in task')
     parser_fs.add_argument('--shots', type=int, default=1, required=False, help='Number of class examples')
     parser_fs.add_argument('--steps', type=int, default=1, required=False, help='Number of adaptation steps.')
-    parser_fs.add_argument('--trainable_fe', type=bool, default=False, required=False, help="Tells if model should use trainable backbone")
-    parser_fs.add_argument('--backbone_type', type=str, default="ResNet18", required=False, choices=sorted(feature_extractors.keys()), help="Specifies trainable backbone (used if trainable_fe == True)")
+    parser_fs.add_argument('--trainable_fe', type=bool, default=False, required=False, help='Tells if model should use trainable backbone')
+    parser_fs.add_argument('--backbone_type', type=str, default="ResNet18", required=False, choices=sorted(feature_extractors.keys()), help='Specifies trainable backbone (used if trainable_fe == True)')
 
     return parser
 

@@ -3,3 +3,4 @@ __pycache__/
 dataset/
 env/
 .DS_Store
+.vscode
