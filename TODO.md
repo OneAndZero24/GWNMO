@@ -20,6 +20,7 @@
     - ~~check gwnmofs training_step~~
     - ~~check differentation in torchviz~~
     - for other ways and query values matrix mult fails(debug why)
+    - verify if other embedding from TrainableFeatureExtractor require dedicated dataset transformations
 - **compare to tables from prev paper crosschar**
     - *implement same architecture* Mati
     - grids
