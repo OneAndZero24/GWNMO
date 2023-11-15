@@ -25,7 +25,7 @@ class GWNMOFS(FSModuleABC):
                  adaptation_steps: int = 1, 
                  ways: int = 5,
                  shots: int = 1, 
-                 query: int = 10,
+                 query: int = 50,
                  trainable_fe: bool = False, 
                  feature_extractor_backbone = None
         ):
