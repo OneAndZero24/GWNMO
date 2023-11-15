@@ -35,10 +35,8 @@ class GWNMOFS(FSModuleABC):
 
         
         if not trainable_fe:
-            print("Using non-trainable FeatureExtractor")
             self.FE = FeatureExtractor().to(device)
         else:
-            print("Using TrainableFeatureExtractor")
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
         self.loss = nn.NLLLoss()
 

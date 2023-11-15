@@ -7,6 +7,7 @@ from __init__ import __version__
 from neptune_logger import NeptuneLogger
 from datasets import *
 from models.feature_extractor import feature_extractors
+import logging
 
 
 # Singleton boilerplate
@@ -82,7 +83,7 @@ class LoggerHandler(metaclass=Singleton):
 
     def get(self):
         return self.logger
-    
+
 logger = LoggerHandler()
 
 

@@ -42,9 +42,6 @@ class FeatureExtractor(nn.Module):
         Input must have ResNet18 digestible format
         """
 
-        print(f"Input dim {x.shape}")
-        print(f"Output dim {self.model(x).shape}")
-        print(f"Output content {self.model(x)}")
         return self.model(x)
 
 
@@ -77,8 +74,6 @@ class TrainableFeatureExtractor(nn.Module):
     def forward(self, x):
         if x.shape[0] == 0:
             return x.reshape([0, 512, 1, 1])
-        print(f"Input dim {x.shape}")
         output = self.model(x)
         output = torch.reshape(self.model(x),(output.shape[0], output.shape[1], 1, 1))
-        print(f"Output dim {output.shape}")
         return output
