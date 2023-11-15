@@ -2,3 +2,4 @@ __pycache__/
 .tool-versions
 dataset/
 env/
+.DS_Store
