@@ -72,8 +72,6 @@ class TrainableFeatureExtractor(nn.Module):
         self.model = feature_extractors[backbone_name](flatten=flatten)
     
     def forward(self, x):
-        if x.shape[0] == 0:
-            return x.reshape([0, 512, 1, 1])
         output = self.model(x)
         output = torch.reshape(self.model(x),(output.shape[0], output.shape[1], 1, 1))
         return output

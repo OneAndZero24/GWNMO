@@ -19,6 +19,7 @@
     - ~~fix few-shot - ways classes target output~~
     - ~~check gwnmofs training_step~~
     - ~~check differentation in torchviz~~
+    - for other ways and query values matrix mult fails(debug why)
 - **compare to tables from prev paper crosschar**
     - *implement same architecture* Mati
     - grids

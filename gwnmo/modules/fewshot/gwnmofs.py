@@ -23,8 +23,9 @@ class GWNMOFS(FSModuleABC):
                  gm: float = 0.001,
                  normalize: bool = True, 
                  adaptation_steps: int = 1, 
-                 ways: int = 1,
-                 shots: int = 5, 
+                 ways: int = 5,
+                 shots: int = 1, 
+                 query: int = 10,
                  trainable_fe: bool = False, 
                  feature_extractor_backbone = None
         ):
@@ -47,6 +48,7 @@ class GWNMOFS(FSModuleABC):
         self.adaptation_steps = adaptation_steps
         self.ways = ways
         self.shots = shots
+        self.query = query
 
         self.reset_target()
 

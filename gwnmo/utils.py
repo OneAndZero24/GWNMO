@@ -65,7 +65,8 @@ def _setup_arg_parser():
     parser_fs.add_argument('--lr2', type=float, default=0.01, required=False, help='Secondary learning rate')
     parser_fs.add_argument('--ways', type=int, default=5, required=False, help='Number of classes in task')
     parser_fs.add_argument('--shots', type=int, default=1, required=False, help='Number of class examples')
-    parser_fs.add_argument('--steps', type=int, default=1, required=False, help='Number of adaptation steps.')
+    parser_fs.add_argument('--query', type=int, default=50, required=False, help='Number of samples in query set (ideally multiplicity of n_way)')
+    parser_fs.add_argument('--steps', type=int, default=1, required=False, help='Number of adaptation steps')
     parser_fs.add_argument('--trainable_fe', type=bool, default=False, required=False, help='Tells if model should use trainable backbone')
     parser_fs.add_argument('--backbone_type', type=str, default="ResNet18", required=False, choices=sorted(feature_extractors.keys()), help='Specifies trainable backbone (used if trainable_fe == True)')
 

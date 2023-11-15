@@ -103,11 +103,13 @@ def setup_SVHN(batch_size: int = 32):
 
 OMNIGLOT_CLASSES = 1623
 
-def setup_FS_Omniglot(device, ways: int, shots: int):
+def setup_FS_Omniglot(device, ways: int, shots: int, query: int):
     """
     Returns properly setup Omniglot Taskset:
     `(taskset.train, taskset.test)`
     """
+
+    query = query // ways # ideally query should be multiplicity of ways
 
     trans = transforms.Compose([       
         transforms.ToTensor(),
@@ -122,15 +124,15 @@ def setup_FS_Omniglot(device, ways: int, shots: int):
     test_dataset = l2l.data.FilteredMetaDataset(dataset, labels=classes[1100:])
 
     train_fs_trans = [
-        NWays(train_dataset, ways),
-        KShots(train_dataset, shots),
+        NWays(train_dataset, ways), 
+        KShots(train_dataset, shots + query),
         LoadData(train_dataset),
         RemapLabels(train_dataset),
         ConsecutiveLabels(train_dataset),
     ]
     test_fs_trans = [
         NWays(test_dataset, ways),
-        KShots(test_dataset, shots),
+        KShots(test_dataset, shots + query),
         LoadData(test_dataset),
         RemapLabels(test_dataset),
         ConsecutiveLabels(test_dataset),
