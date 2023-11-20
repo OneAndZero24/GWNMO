@@ -8,7 +8,7 @@ from modules.fewshot.fsmodule_abc import FSModuleABC
 
 from utils import device 
 from models.target import ScallableTarget
-from models.feat_ex import FeatEx
+from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
 from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
 
@@ -17,10 +17,29 @@ class GWNMOFS(FSModuleABC):
     GWNMOFS - Few Shot training algorithm based on GWNMO.
     """
 
-    def __init__(self, lr1: float = 0.01, lr2: float = 0.01, gm: float = 0.001,
-                normalize: bool = True, adaptation_steps: int = 1, ways: int = 5,
-                shots: int = 1):
+    def __init__(self, 
+                 lr1: float = 0.01, 
+                 lr2: float = 0.01, 
+                 gm: float = 0.001,
+                 normalize: bool = True, 
+                 adaptation_steps: int = 1, 
+                 ways: int = 5,
+                 shots: int = 1, 
+                 query: int = 50,
+                 trainable_fe: bool = False, 
+                 feature_extractor_backbone = None
+        ):
         super(GWNMOFS, self).__init__()
+
+        self.MO = MetaOptimizer().to(device)
+        self.MO.train()
+
+        
+        if not trainable_fe:
+            self.FE = FeatureExtractor().to(device)
+        else:
+            self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
+        self.loss = nn.NLLLoss()
 
         self.lr1 = lr1
         self.lr2 = lr2
@@ -29,13 +48,13 @@ class GWNMOFS(FSModuleABC):
         self.adaptation_steps = adaptation_steps
         self.ways = ways
         self.shots = shots
+        self.query = query
 
         self.reset_target()
 
         self.MO = MetaOptimizer(insize=348170, outsize=172805).to(device)
         self.MO.train()
 
-        self.FE = FeatEx().to(device)
         self.loss = nn.NLLLoss()
 
         self.opt = GWNMOopt(

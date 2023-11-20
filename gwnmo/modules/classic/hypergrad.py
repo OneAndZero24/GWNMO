@@ -7,7 +7,7 @@ from modules.module_abc import ModuleABC
 
 from utils import device, normalize_weighting
 from models.target import Target
-from models.feat_ex import FeatEx
+from models.feature_extractor import FeatureExtractor
 
 
 def gen_hypergrad_transform(normalize: bool = False):
@@ -52,7 +52,7 @@ class HyperGrad(ModuleABC):
 
         self.state = None   # For repetitions
 
-        self.FE = FeatEx().to(device)
+        self.FE = FeatureExtractor().to(device)
         self._target = Target().to(device)
         self.loss = nn.NLLLoss()
 

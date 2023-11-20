@@ -30,8 +30,9 @@ if __name__ == '__main__':
         train(dataset_gen(), args.epochs, args.reps, module)
     else:
         if Module == GWNMOFS:
-            module = Module(args.lr, args.lr2, args.gamma, not args.nonorm, args.steps, args.ways, args.shots)
+            module = Module(args.lr, args.lr2, args.gamma, not args.nonorm, args.steps, args.ways, args.shots, args.query, args.trainable_fe, args.backbone_type)
 
         logger.get().log_model_summary(module)
 
-        train_twostep(dataset_gen(device, args.ways, args.shots), args.epochs, module)
+        dataset = dataset_gen(device, args.ways, args.shots, args.query)
+        train_twostep(dataset, args.epochs, module)
