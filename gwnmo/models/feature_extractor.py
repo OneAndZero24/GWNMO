@@ -15,8 +15,6 @@ feature_extractors = dict(
     ResNet34 = ResNet34,
     ResNet50 = ResNet50,
     ResNet101 = ResNet101,
-    Conv4WithKernel = Conv4WithKernel,
-    ResNetWithKernel = ResNetWithKernel,
 )
 
 # Initial pretrained feature extractor (ResNet18)
@@ -62,9 +60,7 @@ class TrainableFeatureExtractor(nn.Module):
                     Literal["ResNet18"],
                     Literal["ResNet34"],
                     Literal["ResNet50"],
-                    Literal["ResNet101"],
-                    Literal["Conv4WithKernel"],
-                    Literal["ResNetWithKernel"]
+                    Literal["ResNet101"]
                 ],
                 flatten = True
     ):
@@ -73,5 +69,6 @@ class TrainableFeatureExtractor(nn.Module):
     
     def forward(self, x):
         output = self.model(x)
+        print(output.shape)
         output = torch.reshape(self.model(x),(output.shape[0], output.shape[1], 1, 1))
         return output

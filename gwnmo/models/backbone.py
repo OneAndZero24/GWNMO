@@ -6,6 +6,7 @@ import torch.nn as nn
 import math
 import torch.nn.functional as F
 from torch.nn.utils.weight_norm import WeightNorm
+from torch.nn import Flatten
 # Basic ResNet model
 
 def init_layer(L):
@@ -16,70 +17,6 @@ def init_layer(L):
     elif isinstance(L, nn.BatchNorm2d):
         L.weight.data.fill_(1)
         L.bias.data.fill_(0)
-
-class distLinear(nn.Module):
-    def __init__(self, indim, outdim):
-        super(distLinear, self).__init__()
-        self.L = nn.Linear( indim, outdim, bias = False)
-        self.class_wise_learnable_norm = True  #See the issue#4&8 in the github
-        if self.class_wise_learnable_norm:
-            WeightNorm.apply(self.L, 'weight', dim=0) #split the weight update component to direction and norm
-
-        if outdim <=200:
-            self.scale_factor = 2 #a fixed scale factor to scale the output of cos value into a reasonably large input for softmax
-        else:
-            self.scale_factor = 10 #in omniglot, a larger scale factor is required to handle >1000 output classes.
-
-    def forward(self, x):
-        x_norm = torch.norm(x, p=2, dim =1).unsqueeze(1).expand_as(x)
-        x_normalized = x.div(x_norm+ 0.00001)
-        if not self.class_wise_learnable_norm:
-            L_norm = torch.norm(self.L.weight.data, p=2, dim =1).unsqueeze(1).expand_as(self.L.weight.data)
-            self.L.weight.data = self.L.weight.data.div(L_norm + 0.00001)
-        cos_dist = self.L(x_normalized) #matrix product by forward function, but when using WeightNorm, this also multiply the cosine distance by a class-wise learnable norm, see the issue#4&8 in the github
-        scores = self.scale_factor* (cos_dist)
-
-        return scores
-
-class Flatten(nn.Module):
-    def __init__(self):
-        super(Flatten, self).__init__()
-
-    def forward(self, x):
-        return x.view(x.size(0), -1)
-
-
-class Linear_fw(nn.Linear): #used in MAML to forward input with fast weight
-    def __init__(self, in_features, out_features):
-        super(Linear_fw, self).__init__(in_features, out_features)
-        self.weight.fast = None #Lazy hack to add fast weight link
-        self.bias.fast = None
-
-
-    def forward(self, x):
-        if self.weight.fast is not None and self.bias.fast is not None:
-            out = F.linear(x, self.weight.fast, self.bias.fast) #weight.fast (fast weight) is the temporaily adapted weight
-        else:
-            out = super(Linear_fw, self).forward(x)
-        return out
-
-class BLinear_fw(Linear_fw): #used in BHMAML to forward input with fast weight
-    def __init__(self, in_features, out_features):
-        super(BLinear_fw, self).__init__(in_features, out_features)
-        self.weight.logvar = None
-        self.weight.mu = None
-        self.bias.logvar = None
-        self.bias.mu = None
-    def forward(self, x):
-        if self.weight.fast is not None and self.bias.fast is not None:
-            preds = []
-            for w, b in zip(self.weight.fast, self.bias.fast):
-                preds.append(F.linear(x, w, b))
-
-            out = sum(preds) / len(preds)
-        else:
-            out = super(BLinear_fw, self).forward(x)
-        return out
 
 class Conv2d_fw(nn.Conv2d): #used in MAML to forward input with fast weight
     def __init__(self, in_channels, out_channels, kernel_size, stride=1,padding=0, bias = True):
@@ -395,130 +332,6 @@ class ResNet(nn.Module):
         out = self.trunk(x)
         return out
 
-# Backbone for QMUL regression
-class Conv3(nn.Module):
-    def __init__(self):
-        super(Conv3, self).__init__()
-        self.layer1 = nn.Conv2d(3, 36, 3,stride=2,dilation=2)
-        self.layer2 = nn.Conv2d(36,36, 3,stride=2,dilation=2)
-        self.layer3 = nn.Conv2d(36,36, 3,stride=2,dilation=2)
-
-    def return_clones(self):
-        layer1_w = self.layer1.weight.data.clone().detach()
-        layer2_w = self.layer2.weight.data.clone().detach()
-        layer3_w = self.layer3.weight.data.clone().detach()
-        return [layer1_w, layer2_w, layer3_w]
-
-    def assign_clones(self, weights_list):
-        self.layer1.weight.data.copy_(weights_list[0])
-        self.layer2.weight.data.copy_(weights_list[1])
-        self.layer3.weight.data.copy_(weights_list[2])
-
-    def forward(self, x):
-        out = F.relu(self.layer1(x))
-        out = F.relu(self.layer2(out))
-        out = F.relu(self.layer3(out))
-        out = out.view(out.size(0), -1)
-        return out
-
-
-# just to test the kernel hypothesis
-class BackboneKernel(nn.Module):
-    def __init__(self, input_dim: int, output_dim: int, num_layers: int, hidden_dim: int, flatten: bool =False, **kwargs):
-        super().__init__()
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.num_layers = num_layers
-        self.hidden_dim = hidden_dim
-        self.flatten = flatten
-        self.model = self.create_model()
-
-    def create_model(self):
-
-        assert self.num_layers >= 1, "Number of hidden layers must be at least 1"
-        modules = [nn.Linear(self.input_dim, self.hidden_dim), nn.ReLU()]
-        if self.flatten:
-            modules = [nn.Flatten()] + modules
-        for i in range(self.num_layers - 1):
-            modules.append(nn.Linear(self.hidden_dim, self.hidden_dim))
-            modules.append(nn.ReLU())
-        modules.append(nn.Linear(self.hidden_dim, self.output_dim))
-
-        model = nn.Sequential(*modules)
-        return model
-
-    def forward(self, x, **params):
-        r"""
-        Computes the covariance between x1 and x2.
-        This method should be imlemented by all Kernel subclasses.
-
-        Args:
-            :attr:`x1` (Tensor `n x d` or `b x n x d`):
-                First set of data
-            :attr:`x2` (Tensor `m x d` or `b x m x d`):
-                Second set of data
-            :attr:`diag` (bool):
-                Should the Kernel compute the whole kernel, or just the diag?
-            :attr:`last_dim_is_batch` (tuple, optional):
-                If this is true, it treats the last dimension of the data as another batch dimension.
-                (Useful for additive structure over the dimensions). Default: False
-
-        Returns:
-            :class:`Tensor` or :class:`gpytorch.lazy.LazyTensor`.
-                The exact size depends on the kernel's evaluation mode:
-
-                * `full_covar`: `n x m` or `b x n x m`
-                * `full_covar` with `last_dim_is_batch=True`: `k x n x m` or `b x k x n x m`
-                * `diag`: `n` or `b x n`
-                * `diag` with `last_dim_is_batch=True`: `k x n` or `b x k x n`
-        """
-        out = self.model(x)
-
-        return out
-
-
-class ConvNet4WithKernel(nn.Module):
-    def __init__(self):
-        super(ConvNet4WithKernel, self).__init__()
-        conv_out_size = 1600
-        hn_kernel_layers_no = 4
-        hn_kernel_hidden_dim = 64
-        self.input_dim = conv_out_size
-        self.output_dim = conv_out_size
-        self.num_layers = hn_kernel_layers_no
-        self.hidden_dim = hn_kernel_hidden_dim
-        self.Conv4 = ConvNet(4)
-        self.nn_kernel = BackboneKernel(self.input_dim, self.output_dim,
-                                        self.num_layers, self.hidden_dim)
-        self.final_feat_dim = self.output_dim
-    def forward(self, x):
-        x = self.Conv4(x)
-        out = self.nn_kernel(x)
-        return out
-
-
-
-class ResNet10WithKernel(nn.Module):
-    def __init__(self):
-        super(ResNet10WithKernel, self).__init__()
-        conv_out_size = None
-        hn_kernel_layers_no = None
-        hn_kernel_hidden_dim = None
-        self.input_dim = conv_out_size
-        self.output_dim = conv_out_size
-        self.num_layers = hn_kernel_layers_no
-        self.hidden_dim = hn_kernel_hidden_dim
-        self.Conv4 = ConvNet(4)
-        self.nn_kernel = BackboneKernel(self.input_dim, self.output_dim,
-                                        self.num_layers, self.hidden_dim)
-
-    def forward(self, x):
-        x = self.Conv4(x)
-        x = torch.unsqueeze(torch.flatten(x), 0)
-        out = self.nn_kernel(x)
-        return out
-
-
 def Conv4():
     return ConvNet(4)
 
@@ -572,9 +385,3 @@ def ResNet50( flatten = True):
 
 def ResNet101( flatten = True):
     return ResNet(BottleneckBlock, [3,4,23,3],[256,512,1024,2048], flatten)
-
-def Conv4WithKernel():
-    return ConvNet4WithKernel()
-
-def ResNetWithKernel():
-    return ResNet10WithKernel()
