@@ -1,7 +1,7 @@
 from torch import nn
 import torch
 import torchvision as tv
-from .backbone import Conv4, Conv4Pool, Conv4S, Conv6, ResNet10, ResNet18, ResNet34, ResNet50, ResNet101, Conv4WithKernel, ResNetWithKernel
+from .backbone import Conv4, Conv4Pool, Conv4S, Conv6, ResNet10, ResNet18, ResNet34, ResNet50, ResNet101
 from typing import Union, Literal
 
 # 50 and 101 were not used in papers
@@ -69,6 +69,5 @@ class TrainableFeatureExtractor(nn.Module):
     
     def forward(self, x):
         output = self.model(x)
-        print(output.shape)
         output = torch.reshape(self.model(x),(output.shape[0], output.shape[1], 1, 1))
         return output
