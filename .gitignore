@@ -1,6 +1,10 @@
 __pycache__/
 .tool-versions
 dataset/
+datasets/
+.neptune/
 env/
 .DS_Store
 .vscode
+setup.sh
+notes.txt
