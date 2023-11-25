@@ -8,8 +8,7 @@ def test(module: FSModuleABC, test_loader, epoch: int):
     """
     Test target on whole test
     """
-
-    module.target.eval()
+    module.target.train()
 
     test_error = 0.0
     test_accuracy = 0.0
@@ -40,8 +39,6 @@ def train(dataset, epochs: int, module: FSModuleABC):
     train_loader, test_loader = dataset
 
     module.reset_target()
-    opts = module.configure_optimizers()
-
     for I in range(epochs):
         module.target.train()
 
@@ -49,18 +46,17 @@ def train(dataset, epochs: int, module: FSModuleABC):
         train_accuracy = 0.0
 
         for i, batch in enumerate(train_loader):
-            for opt in opts:
-                opt.zero_grad()
-
             y, preds, err = module.training_step(batch, i)
+
+            opt = module.configure_optimizers()
+            opt.zero_grad()
 
             train_error += err
             train_accuracy += accuracy(preds, y)
 
             err.backward(retain_graph=True)
             
-            for opt in opts:
-                opt.step()
+            opt.step()
 
         train_error /= len(train_loader)
         train_accuracy /= len(train_loader)
