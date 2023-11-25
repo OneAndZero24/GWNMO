@@ -92,6 +92,9 @@ class GWNMOFS(FSModuleABC):
         """
 
         clone = clone_module(self.target)
+        clone.train()
+        for param in clone.parameters():
+            param.retain_grad()
 
         self.opt = GWNMOopt(
             model=clone, 
