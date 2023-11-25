@@ -10,9 +10,6 @@ def test(module: FSModuleABC, test_loader, epoch: int):
     """
     module.target.eval()
 
-    for param in module.target.parameters():
-        param.requires_grad = False
-
     test_error = 0.0
     test_accuracy = 0.0
 
