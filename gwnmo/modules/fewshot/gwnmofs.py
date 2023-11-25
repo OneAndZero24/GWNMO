@@ -12,6 +12,11 @@ from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
 from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
 
+
+OMNIGLOT_RESNET18_IN = 348170
+OMNIGLOT_RESNET18_OUT = 172805
+
+
 class GWNMOFS(FSModuleABC):
     """
     GWNMOFS - Few Shot training algorithm based on GWNMO.
@@ -26,13 +31,11 @@ class GWNMOFS(FSModuleABC):
                  shots: int = 1, 
                  query: int = 50,
                  trainable_fe: bool = False, 
-                 feature_extractor_backbone = None
+                 feature_extractor_backbone = None,
+                 mo_insize: int = OMNIGLOT_RESNET18_IN,
+                 mo_outsize: int = OMNIGLOT_RESNET18_OUT
         ):
         super(GWNMOFS, self).__init__()
-
-        self.MO = MetaOptimizer().to(device)
-        self.MO.train()
-
         
         if not trainable_fe:
             self.FE = FeatureExtractor().to(device)
@@ -50,7 +53,7 @@ class GWNMOFS(FSModuleABC):
 
         self.reset_target()
 
-        self.MO = MetaOptimizer(insize=348170, outsize=172805).to(device)
+        self.MO = MetaOptimizer(insize=mo_insize, outsize=mo_outsize).to(device)
         self.MO.train()
 
         self.loss = nn.NLLLoss()
