@@ -34,5 +34,5 @@ if __name__ == '__main__':
 
         logger.get().log_model_summary(module)
 
-        dataset = dataset_gen(device, args.ways, args.shots, args.query)
+        dataset = dataset_gen(device, args.ways, args.shots, args.query, args.tasks)
         train_twostep(dataset, args.epochs, module)

@@ -103,7 +103,7 @@ def setup_SVHN(batch_size: int = 32):
 
 OMNIGLOT_CLASSES = 1623
 
-def setup_FS_Omniglot(device, ways: int, shots: int, query: int):
+def setup_FS_Omniglot(device, ways: int, shots: int, query: int, tasks: int):
     """
     Returns properly setup Omniglot Taskset:
     `(taskset.train, taskset.test)`
@@ -138,7 +138,7 @@ def setup_FS_Omniglot(device, ways: int, shots: int, query: int):
         ConsecutiveLabels(test_dataset),
     ]
 
-    train_tasksets = l2l.data.TaskDataset(dataset=train_dataset, task_transforms=train_fs_trans, num_tasks=-1)
-    test_tasksets = l2l.data.TaskDataset(dataset=test_dataset, task_transforms=test_fs_trans, num_tasks=-1)
+    train_tasksets = l2l.data.TaskDataset(dataset=train_dataset, task_transforms=train_fs_trans, num_tasks=tasks)
+    test_tasksets = l2l.data.TaskDataset(dataset=test_dataset, task_transforms=test_fs_trans, num_tasks=tasks)
 
     return (train_tasksets, test_tasksets)

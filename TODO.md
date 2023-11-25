@@ -13,18 +13,17 @@
 - ~~HG normalization CIFAR10 grid~~
 
 ## Few-Shot
-- ~~few-shot~~
+- **implement**
     - ~~implement~~
     - ~~DEBUG~~
     - ~~fix few-shot - ways classes target output~~
     - ~~check gwnmofs training_step~~
     - ~~check differentation in torchviz~~
-    - for other ways and query values matrix mult fails(debug why)
-    - verify if other embedding from TrainableFeatureExtractor require dedicated dataset transformations
-    - *describe our method*
-    - *run on bigger GPU*
+    - **BATCHES in few-shot**
+    - *for other ways and query values matrix mult fails (debug why)*
+    - dedicated dataset transformations for all feature extractors
 - **compare to tables from prev paper crosschar**
-    - *implement same architecture* Mati
+    - **make sure setting is the same**
     - grids
 - extend
     - MetaSGD/MAML
