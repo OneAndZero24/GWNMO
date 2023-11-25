@@ -20,6 +20,7 @@
     - ~~check gwnmofs training_step~~
     - ~~check differentation in torchviz~~
     - **BATCHES in few-shot**
+    - *fix memory consumption by fs dataset*
     - *for other ways and query values matrix mult fails (debug why)*
     - dedicated dataset transformations for all feature extractors
 - **compare to tables from prev paper crosschar**

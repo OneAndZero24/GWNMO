@@ -23,7 +23,8 @@ class GWNMOFS(FSModuleABC):
     """
 
     def __init__(self, 
-                 lr: float = 0.01, 
+                 lr1: float = 0.01,
+                 lr2: float = 0.01,  
                  gm: float = 0.001,
                  normalize: bool = True, 
                  adaptation_steps: int = 1, 
@@ -43,7 +44,8 @@ class GWNMOFS(FSModuleABC):
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
         self.loss = nn.NLLLoss()
 
-        self.lr = lr
+        self.lr1 = lr1
+        self.lr2 = lr2
         self.gamma = gm
         self.normalize = normalize
         self.adaptation_steps = adaptation_steps
@@ -90,7 +92,6 @@ class GWNMOFS(FSModuleABC):
         """
 
         clone = clone_module(self.target)
-        detach_module(clone, keep_requires_grad=True)
 
         self.opt = GWNMOopt(
             model=clone, 
@@ -124,6 +125,8 @@ class GWNMOFS(FSModuleABC):
         adapt_X_embd = torch.reshape(self.FE(adapt_X), (-1, 512))
         eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 512))
 
+        detach_module(self.target, keep_requires_grad=True)
+
         preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
 
         err = self.loss(preds, eval_y)
@@ -132,9 +135,12 @@ class GWNMOFS(FSModuleABC):
     
     def configure_optimizers(self) -> list:
         """
-        Sets-up & returns proper optimizers alpha & start
+        Sets-up & returns proper optimizer
         """
 
-        adam = torch.optim.Adam(self.opt.parameters(), lr=self.lr)
+        adam = torch.optim.Adam([
+            {'params': self.opt.parameters(), 'lr': self.lr1},
+            {'params': self.target.parameters(), 'lr': self.lr2},
+        ])
 
         return adam
