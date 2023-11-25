@@ -13,9 +13,8 @@ def test(module: FSModuleABC, test_loader, epoch: int):
     test_error = 0.0
     test_accuracy = 0.0
 
-    for i, (X, y) in enumerate(test_loader):
-        X, y = X.to(device), y.to(device)
-        _, preds, err = module.training_step((X, y), i)
+    for i, batch in enumerate(test_loader):
+        y, preds, err = module.training_step(batch, i)
         test_error += err
         test_accuracy += accuracy(preds, y)
     test_error /= len(test_loader)
