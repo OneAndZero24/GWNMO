@@ -8,3 +8,16 @@ env/
 .vscode
 setup.sh
 notes.txt
+*.sbatch
+**/slurm.*.css
+omniglot_few_shot/images
+omniglot_few_shot/images_background.zip
+omniglot_few_shot/images_evaluation.zip
+omniglot_few_shot/novel.json
+omniglot_few_shot/test.txt
+omniglot_few_shot/train.txt
+omniglot_few_shot/val.json
+omniglot_few_shot/val.txt
+omniglot_few_shot/base.json
+job_configs/
+export_neptune_credentials.sh
