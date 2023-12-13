@@ -9,7 +9,7 @@ env/
 setup.sh
 notes.txt
 *.sbatch
-**/slurm.*.css
+*.out
 omniglot_few_shot/images
 omniglot_few_shot/images_background.zip
 omniglot_few_shot/images_evaluation.zip
