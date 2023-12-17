@@ -6,9 +6,9 @@ import json
 import random
 import re
 
-path_base = os.environ('OMNIGLOT_PATH')
-data_path = join(path_base,'images')
-savedir = path_base
+cwd = os.getcwd() 
+data_path = join(cwd,'images')
+savedir = './'
 
 #if not os.path.exists(savedir):
 #    os.makedirs(savedir)

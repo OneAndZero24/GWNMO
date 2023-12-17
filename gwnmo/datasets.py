@@ -244,9 +244,9 @@ class SetDataManager(DataManager):
 
 def experimental_setup_FS_Omniglot(device, ways, shots, query, tasks):
     image_size = 224
-    path_base = os.environ('OMNIGLOT_PATH')
-    train_file = os.path.join(path_base, 'base.json')
-    test_file = os.path.join(path_base, 'val.json')
+    cwd = os.getcwd()
+    train_file = os.path.join(cwd, 'omniglot_few_shot/base.json')
+    test_file = os.path.join(cwd, 'omniglot_few_shot/val.json')
 
 
     train_data_manager = SetDataManager(image_size, **dict(n_way=ways, n_support=shots, n_query=query))
