@@ -22,9 +22,8 @@
     - ~~fix memory consumption by fs datase*~~
     - for other ways and query values matrix mult fails (debug why)
     - dedicated dataset transformations for all feature extractors
-    - debug grid crashes
 - ~~bigger test grid~~
-- cleanup & pr
+- cleanup & pr experiment/fs-datasets
 - **ones instead of weighting (optional till set epoch, flag)**
 - optuna integration
 - **grids**
