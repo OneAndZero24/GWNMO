@@ -19,26 +19,23 @@
     - ~~fix few-shot - ways classes target output~~
     - ~~check gwnmofs training_step~~
     - ~~check differentation in torchviz~~
-    - **BATCHES in few-shot**
-    - *fix memory consumption by fs dataset*
-    - *for other ways and query values matrix mult fails (debug why)*
+    - ~~fix memory consumption by fs datase*~~
+    - for other ways and query values matrix mult fails (debug why)
     - dedicated dataset transformations for all feature extractors
-- **compare to tables from prev paper crosschar**
-    - **make sure setting is the same**
-    - grids
-- extend
-    - MetaSGD/MAML
-    - grids omniglot
+- ~~bigger test grid~~
+- cleanup & pr experiment/fs-datasets
+- **ones instead of weighting (optional till set epoch, flag)**
+- optuna integration
+- **grids**
 
 ## Experiment improvements
 - **make sure dataset is permuted between epochs**
 - **k-fold**
 - ~~log training metrics~~
 - better classification metrics
-- **smaller architectures**
 
 ## Further
-- **attention on optimizer steps**
+- **smaller architectures**
 - **metaoptimizer architecture**
     - **grad FE learning along with target, average pooling on weights/grads**
     - **self attention on grad**
@@ -48,5 +45,3 @@
 - **cross model**
 - cross dataset in classical setting MNIST -> FMNIST
 - bigger alternative grids
-- **longer experiments**
-- GWNMO as LLM finetuning
