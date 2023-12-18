@@ -13,7 +13,7 @@ class GWNMO(torch.nn.Module):
     Gradient Weighting by Neural Meta Optimizer implementation based on learn2learn LearnableOptimizer
     """
 
-    def __init__(self, model, transform, gamma=0.01, normalize=True):
+    def __init__(self, model, transform, gamma=0.01, normalize=True, weighting=True):
         super(GWNMO, self).__init__()
         self.gamma = gamma
         self.normalize = normalize
@@ -26,6 +26,7 @@ class GWNMO(torch.nn.Module):
             'model': model,
         }
 
+        self._weighting = weighting
         self.transform = transform
 
     def step(self, x_embd, closure=None):
@@ -57,6 +58,10 @@ class GWNMO(torch.nn.Module):
                 updates = -self.gamma*normalize_weighting(h, grad)
             else:
                 updates = -self.gamma*h*grad
+
+            if not self._weighting:
+                ones = torch.ones_like(updates)
+                torch.where((updates-ones).bool(), updates, ones)
 
             start = 0
             for i in range(len(params)):

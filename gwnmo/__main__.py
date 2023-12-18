@@ -6,7 +6,7 @@ from modules.classic.hypergrad import HyperGrad
 from modules.fewshot.gwnmofs import GWNMOFS
 
 from train import train
-from trainfs import train as train_twostep
+from trainfs import train as train_fs
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -35,4 +35,4 @@ if __name__ == '__main__':
         logger.get().log_model_summary(module)
 
         dataset = dataset_gen(device, args.ways, args.shots, args.query, args.tasks)
-        train_twostep(dataset, args.epochs, module)
+        train_fs(dataset, args.epochs, module, args.no_weighting)

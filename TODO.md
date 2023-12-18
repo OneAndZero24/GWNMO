@@ -24,7 +24,7 @@
     - dedicated dataset transformations for all feature extractors
 - ~~bigger test grid~~
 - cleanup & pr experiment/fs-datasets
-- **ones instead of weighting (optional till set epoch, flag)**
+- ~~ones instead of weighting (optional till set epoch, flag)~~
 - optuna integration
 - **grids**
 

@@ -44,6 +44,8 @@ class GWNMOFS(FSModuleABC):
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
         self.loss = nn.NLLLoss()
 
+        self._weighting = True
+
         self.lr1 = lr1
         self.lr2 = lr2
         self.gamma = gm
@@ -64,6 +66,9 @@ class GWNMOFS(FSModuleABC):
     def target(self):
         return self._target
     
+    def toggle_weighting(self, state):
+        self._weighting = state
+
     def reset_target(self):
         """
         Reinitializes target model
@@ -100,7 +105,8 @@ class GWNMOFS(FSModuleABC):
             model=clone, 
             transform=self.MO, 
             gamma=self.gamma, 
-            normalize=self.normalize
+            normalize=self.normalize,
+            weighting=self._weighting
         ).to(device)      
 
         for i in range(self.adaptation_steps):
