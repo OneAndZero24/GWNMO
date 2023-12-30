@@ -236,9 +236,6 @@ class FSOmniglot(VisionDataset):
         # assure that root directory and images directory exist
         if not os.path.exists(self.root):
             os.mkdir(self.root)
-        else:
-            shutil.rmtree(self.root)
-            os.mkdir(self.root)
         
         if not os.path.exists(self.images_path):
             os.mkdir(self.images_path)

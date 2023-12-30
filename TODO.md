@@ -23,7 +23,7 @@
     - for other ways and query values matrix mult fails (debug why)
     - dedicated dataset transformations for all feature extractors
 - ~~bigger test grid~~
-- cleanup & pr experiment/fs-datasets
+- cleanup & pr experiment/fs-datasets, feat/ones
 - ~~ones instead of weighting (optional till set epoch, flag)~~
 - optuna integration
 - **grids**
