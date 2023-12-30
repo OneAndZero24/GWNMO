@@ -237,16 +237,16 @@ class FSOmniglot(VisionDataset):
         if not os.path.exists(self.root):
             os.mkdir(self.root)
         
-        if not os.path.exists(self.images_path):
-            os.mkdir(self.images_path)
+            if not os.path.exists(self.images_path):
+                os.mkdir(self.images_path)
 
-        self._get_and_extract_zip(self.background_url)
-        self._get_and_extract_zip(self.evaluation_url)
+            self._get_and_extract_zip(self.background_url)
+            self._get_and_extract_zip(self.evaluation_url)
 
-        self._delete_parent_folder('images_background')
-        self._delete_parent_folder('images_evaluation')
+            self._delete_parent_folder('images_background')
+            self._delete_parent_folder('images_evaluation')
 
-        self._save_text_files()
+            self._save_text_files()
 
     def __getitem__(self,i):
         return next(iter(self.sub_dataloader[i]))
