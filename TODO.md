@@ -22,7 +22,6 @@
     - ~~fix memory consumption by fs datase*~~
     - **for other ways and query values matrix mult fails (debug why)**
 - ~~bigger test grid~~
-- cleanup & pr experiment/fs-datasets, feat/ones
 - ~~ones instead of weighting (optional till set epoch, flag)~~
 - optuna integration
 - **grids**
