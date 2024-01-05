@@ -22,6 +22,11 @@
     - ~~fix memory consumption by fs datase*~~
     - **for other ways and query values matrix mult fails (debug why)**
     - dedicated dataset transformations for all feature extractors
+- **debug**
+    - *batch norm*
+    - finetune parameters
+    - **check for vanishing grads**
+    - **bigger architecture**
 - ~~bigger test grid~~
 - ~~ones instead of weighting (optional till set epoch, flag)~~
 - optuna integration
