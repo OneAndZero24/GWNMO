@@ -30,7 +30,7 @@ class GWNMOFS(FSModuleABC):
                  adaptation_steps: int = 1, 
                  ways: int = 5,
                  shots: int = 1, 
-                 query: int = 50,
+                 query: int = 10,
                  trainable_fe: bool = False, 
                  feature_extractor_backbone = None,
                  mo_insize: int = OMNIGLOT_RESNET18_IN,
@@ -43,6 +43,8 @@ class GWNMOFS(FSModuleABC):
         else:
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
         self.loss = nn.NLLLoss()
+
+        self._weighting = True
 
         self.lr1 = lr1
         self.lr2 = lr2
@@ -64,6 +66,9 @@ class GWNMOFS(FSModuleABC):
     def target(self):
         return self._target
     
+    def toggle_weighting(self, state):
+        self._weighting = state
+
     def reset_target(self):
         """
         Reinitializes target model
@@ -100,7 +105,8 @@ class GWNMOFS(FSModuleABC):
             model=clone, 
             transform=self.MO, 
             gamma=self.gamma, 
-            normalize=self.normalize
+            normalize=self.normalize,
+            weighting=self._weighting
         ).to(device)      
 
         for i in range(self.adaptation_steps):
@@ -113,6 +119,19 @@ class GWNMOFS(FSModuleABC):
             self.opt.step(adapt_X_embd)
 
         return clone(eval_X_embd)
+    
+    def map_classes(self, y):
+        flattened_y = torch.flatten(y)
+        classes_list = flattened_y.tolist()
+
+        assert len(set(classes_list)) == self.ways, f"Invalid number of classes {set(classes_list)}"
+
+        mapping_dict = dict()
+        for idx, val in enumerate(set(classes_list)):
+            mapping_dict[val] = idx
+
+        return y.apply_(lambda x: mapping_dict[x])
+        
 
     def training_step(self, batch, batch_idx):
         """
@@ -121,7 +140,12 @@ class GWNMOFS(FSModuleABC):
         """
 
         X, y = batch
-        (adapt_X, adapt_y), (eval_X, eval_y) = partition_task(X, y, shots=self.shots)
+        y = self.map_classes(y)
+        adapt_X = X[:,:self.shots,:,:,:].contiguous().view( self.ways* self.shots, *X.size()[2:]) #support data 
+        eval_X = X[:,self.shots:,:,:,:].contiguous().view( self.ways* self.query, *X.size()[2:]) #query data
+        
+        adapt_y = y[:,:self.shots].reshape((-1))
+        eval_y = y[:,self.shots:].reshape((-1))
 
         adapt_X, adapt_y, eval_X, eval_y = adapt_X.to(device), adapt_y.to(device), eval_X.to(device), eval_y.to(device)
 

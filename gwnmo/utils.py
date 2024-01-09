@@ -5,7 +5,7 @@ import torch
 
 from __init__ import __version__
 from neptune_logger import NeptuneLogger
-from datasets import *
+from datasets_utils import *
 from models.feature_extractor import feature_extractors
 import logging
 
@@ -64,9 +64,10 @@ def _setup_arg_parser():
     parser_fs.add_argument('--lr2', type=float, default=0.01, required=False, help='Secondary learning rate')
     parser_fs.add_argument('--ways', type=int, default=5, required=False, help='Number of classes in task')
     parser_fs.add_argument('--shots', type=int, default=1, required=False, help='Number of class examples')
-    parser_fs.add_argument('--query', type=int, default=50, required=False, help='Number of samples in query set (ideally multiplicity of n_way)')
+    parser_fs.add_argument('--query', type=int, default=10, required=False, help='Number of samples in query set (ideally multiplicity of n_way)')
     parser_fs.add_argument('--steps', type=int, default=1, required=False, help='Number of adaptation steps')
-    parser_fs.add_argument('--tasks', type=int, default=1000, required=False, help='Number of tasksets in epoch')
+    parser_fs.add_argument('--tasks', type=int, default=100, required=False, help='Number of tasksets in epoch')
+    parser_fs.add_argument('--no_weighting', type=int, default=-1, required=False, help='Number of epochs for wich GWNMOFS weighting will be set to one')
     parser_fs.add_argument('--trainable_fe', type=bool, default=False, required=False, help='Tells if model should use trainable backbone')
     parser_fs.add_argument('--backbone_type', type=str, default="ResNet18", required=False, choices=sorted(feature_extractors.keys()), help='Specifies trainable backbone (used if trainable_fe == True)')
 
@@ -122,6 +123,6 @@ map2cmd = {
         "fmnist": setup_FMNIST,
         "cifar10": setup_CIFAR10,
         "svhn": setup_SVHN,
-        "omniglot": setup_FS_Omniglot
+        "omniglot": experimental_setup_FS_Omniglot
     }
 }

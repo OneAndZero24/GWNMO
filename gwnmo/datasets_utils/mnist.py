@@ -1,0 +1,33 @@
+import os
+import torch
+from torch.utils.data import DataLoader
+import torchvision.datasets as datasets
+import torchvision.transforms as transforms
+from torchvision.models import ResNet18_Weights
+
+_kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
+DATASET_DIR = os.getenv('DATASET_DIR')
+if DATASET_DIR is None:
+    DATASET_DIR = '/shared/sets/datasets'
+
+def setup_MNIST(batch_size: int = 32):
+    """
+    Returns properly setup MNIST Dataloader:
+    `(train_loader, test_loader)`
+    """
+
+    trans = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Lambda(lambda x: x.repeat(3, 1, 1)),
+        ResNet18_Weights.DEFAULT.transforms(antialias=True), 
+    ])
+    train_loader = DataLoader(
+        datasets.MNIST(DATASET_DIR, train=True, download=True, transform=trans),
+        batch_size=batch_size, shuffle=True, drop_last=True, **_kwargs
+    )
+    test_loader = DataLoader(
+        datasets.MNIST(DATASET_DIR, train=False, download=True, transform=trans),
+        batch_size=batch_size, shuffle=False, drop_last=True, **_kwargs
+    )
+
+    return (train_loader, test_loader)

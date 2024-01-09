@@ -25,7 +25,7 @@ def test(module: FSModuleABC, test_loader, epoch: int):
         }, epoch)
 
 
-def train(dataset, epochs: int, module: FSModuleABC):
+def train(dataset, epochs: int, module: FSModuleABC, no_weighting: int = -1):
     """
     FewShot training flow
     - Gets batch
@@ -36,8 +36,12 @@ def train(dataset, epochs: int, module: FSModuleABC):
 
     train_loader, test_loader = dataset
 
+    module.toggle_weighting(False)
+
     module.reset_target()
     for I in range(epochs):
+        if I > no_weighting:
+            module.toggle_weighting(True)
         module.target.train()
 
         train_error = 0.0
