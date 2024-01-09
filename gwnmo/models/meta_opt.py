@@ -17,16 +17,13 @@ class MetaOptimizer(nn.Module):
 
         super(MetaOptimizer, self).__init__()
         self.seq = nn.Sequential()
-        self.seq.append(nn.BatchNorm1d(insize))
         self.seq.append(nn.Linear(insize, 128))
         self.seq.append(nn.ReLU())
-        self.seq.append(nn.BatchNorm1d(128))
         self.seq.append(nn.Linear(128, 32))
         self.seq.append(nn.ReLU())
-        self.seq.append(nn.BatchNorm1d(32))
         self.seq.append(nn.Linear(32, outsize))
         self.seq.append(nn.ReLU())
 
     def forward(self, params, grad, x_embd):
-        x = torch.cat([params, grad, x_embd.flatten()]).reshape([x.shape, 1])
+        x = torch.cat([params, grad, x_embd.flatten()])
         return self.seq(x)
