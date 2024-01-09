@@ -23,6 +23,7 @@
     - **for other ways and query values matrix mult fails (debug why)**
     - dedicated dataset transformations for all feature extractors
 - **debug**
+    - **test MAML, add changes step by step**
     - *batch norm*
     - finetune parameters
     - **check for vanishing grads**
