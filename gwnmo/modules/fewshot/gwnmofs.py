@@ -2,7 +2,6 @@ import torch
 from torch import nn
 
 from learn2learn.utils import clone_module, detach_module
-from learn2learn.data.utils import partition_task
 
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
