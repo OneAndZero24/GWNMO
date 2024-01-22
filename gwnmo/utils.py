@@ -5,7 +5,7 @@ import torch
 
 from __init__ import __version__
 from neptune_logger import NeptuneLogger
-import datasets
+from . import datasets
 from models.feature_extractor import feature_extractors
 import logging
 
