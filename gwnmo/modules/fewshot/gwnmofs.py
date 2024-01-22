@@ -55,6 +55,9 @@ class GWNMOFS(FSModuleABC):
 
         self.reset_target()
 
+        self.MO = MetaOptimizer(insize=mo_insize, outsize=mo_outsize).to(device)
+        self.MO.train()
+
         self.opt = GWNMOopt(
             model=self.target, 
             transform=self.MO, 
@@ -62,9 +65,6 @@ class GWNMOFS(FSModuleABC):
             normalize=self.normalize,
             weighting=self._weighting
         ).to(device)  
-
-        self.MO = MetaOptimizer(insize=mo_insize, outsize=mo_outsize).to(device)
-        self.MO.train()
         
     @property
     def target(self):
