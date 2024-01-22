@@ -5,7 +5,7 @@ import torch
 
 from __init__ import __version__
 from neptune_logger import NeptuneLogger
-from . import datasets
+from .datasets import *
 from models.feature_extractor import feature_extractors
 import logging
 
@@ -134,10 +134,10 @@ map2cmd = {
         "maml": MAML
     },
     "dataset": {
-        "mnist": datasets.setup_MNIST,
-        "fmnist": datasets.setup_FMNIST,
-        "cifar10": datasets.setup_CIFAR10,
-        "svhn": datasets.setup_SVHN,
-        "omniglot": datasets.experimental_setup_FS_Omniglot
+        "mnist": setup_MNIST,
+        "fmnist": setup_FMNIST,
+        "cifar10": setup_CIFAR10,
+        "svhn": setup_SVHN,
+        "omniglot": experimental_setup_FS_Omniglot
     }
 }
