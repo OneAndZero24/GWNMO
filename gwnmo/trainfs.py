@@ -36,22 +36,24 @@ def train(dataset, epochs: int, module: FSModuleABC, no_weighting: int = -1):
 
     train_loader, test_loader = dataset
 
-    module.toggle_weighting(False)
+    if hasattr(module, 'toggle_weighting'):
+        module.toggle_weighting(False)
 
     module.reset_target()
     for I in range(epochs):
         if I > no_weighting:
-            module.toggle_weighting(True)
+            if hasattr(module, 'toggle_weighting'):
+                module.toggle_weighting(True)
         module.target.train()
 
         train_error = 0.0
         train_accuracy = 0.0
 
+        opt = module.configure_optimizers()
+        opt.zero_grad()
+
         for i, batch in enumerate(train_loader):
             y, preds, err = module.training_step(batch, i)
-
-            opt = module.configure_optimizers()
-            opt.zero_grad()
 
             train_error += err
             train_accuracy += accuracy(preds, y)

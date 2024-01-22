@@ -29,6 +29,11 @@ class GWNMO(torch.nn.Module):
         self._weighting = weighting
         self.transform = transform
 
+    def set_state(self, model):
+        self.info = {
+            'model': model
+        }
+
     def step(self, x_embd, closure=None):
         model = self.info['model']
         # Ignore warnings as torch 1.5+ warns about accessing .grad of non-leaf

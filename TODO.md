@@ -3,13 +3,13 @@
 ## Few-Shot
 - **implement**
     - dedicated dataset transformations for all feature extractors
-    - **MAML**
-    - **MO Self-Attention**
+    - ~MAML~
+    - **MO self-attention**
     - grad FE learning along with target, average pooling on weights/grads
+    - MO batch norm
 - **debug**
     - **for other ways and query values matrix mult fails (debug why)**
     - **check for vanishing grads**
-    - MO batch norm
 - **grids**
 
 ## Experiment improvements
