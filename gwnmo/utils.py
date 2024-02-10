@@ -5,7 +5,7 @@ import torch
 
 from __init__ import __version__
 from neptune_logger import NeptuneLogger
-from datasets_utils import *
+from data import *
 from models.feature_extractor import feature_extractors
 import logging
 
@@ -28,6 +28,19 @@ def normalize_weighting(x, grad):
     selected: torch.Tensor = temp*grad
 
     return selected*(torch.linalg.norm(grad)/torch.linalg.norm(selected))
+
+
+def map_classes(ways, y):
+    flattened_y = torch.flatten(y)
+    classes_list = flattened_y.tolist()
+
+    assert len(set(classes_list)) == ways, f"Invalid number of classes {set(classes_list)}"
+
+    mapping_dict = dict()
+    for idx, val in enumerate(set(classes_list)):
+        mapping_dict[val] = idx
+
+    return y.apply_(lambda x: mapping_dict[x])
 
 
 def accuracy(predictions, targets):
@@ -60,7 +73,7 @@ def _setup_arg_parser():
 
     parser_fs = subparsers.add_parser('fewshot')
     parser_fs.add_argument("--dataset", choices=['omniglot'], required=True, default='omniglot', help='Dataset selection')
-    parser_fs.add_argument("--module", choices=['gwnmofs', 'metasgd', 'maml'], required=True, default='gwnmofs', help='Module selection')
+    parser_fs.add_argument("--module", choices=['gwnmofs', 'maml'], required=True, default='gwnmofs', help='Module selection')
     parser_fs.add_argument('--lr2', type=float, default=0.01, required=False, help='Secondary learning rate')
     parser_fs.add_argument('--ways', type=int, default=5, required=False, help='Number of classes in task')
     parser_fs.add_argument('--shots', type=int, default=1, required=False, help='Number of class examples')
@@ -109,6 +122,7 @@ from modules.classic.gwnmo import GWNMO
 from modules.classic.hypergrad import HyperGrad
 
 from modules.fewshot.gwnmofs import GWNMOFS
+from modules.fewshot.maml import MAML
 
 # Maps "selector" arguments to their options handlers
 map2cmd = {
@@ -116,7 +130,8 @@ map2cmd = {
         "gwnmo": GWNMO,
         "hypergrad": HyperGrad,
         "adam": Adam,
-        "gwnmofs": GWNMOFS
+        "gwnmofs": GWNMOFS,
+        "maml": MAML
     },
     "dataset": {
         "mnist": setup_MNIST,

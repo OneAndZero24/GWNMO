@@ -2,11 +2,10 @@ import torch
 from torch import nn
 
 from learn2learn.utils import clone_module, detach_module
-from learn2learn.data.utils import partition_task
 
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
-from utils import device 
+from utils import device, map_classes
 from models.target import ScallableTarget
 from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
 from models.meta_opt import MetaOptimizer
@@ -16,26 +15,25 @@ from core import GWNMO as GWNMOopt
 OMNIGLOT_RESNET18_IN = 348170
 OMNIGLOT_RESNET18_OUT = 172805
 
-
 class GWNMOFS(FSModuleABC):
     """
     GWNMOFS - Few Shot training algorithm based on GWNMO.
     """
 
     def __init__(self, 
-                 lr1: float = 0.01,
-                 lr2: float = 0.01,  
-                 gm: float = 0.001,
-                 normalize: bool = True, 
-                 adaptation_steps: int = 1, 
-                 ways: int = 5,
-                 shots: int = 1, 
-                 query: int = 10,
-                 trainable_fe: bool = False, 
-                 feature_extractor_backbone = None,
-                 mo_insize: int = OMNIGLOT_RESNET18_IN,
-                 mo_outsize: int = OMNIGLOT_RESNET18_OUT
-        ):
+        lr1: float = 0.01,
+        lr2: float = 0.01,  
+        gm: float = 0.001,
+        normalize: bool = True, 
+        adaptation_steps: int = 1, 
+        ways: int = 5,
+        shots: int = 1, 
+        query: int = 10,
+        trainable_fe: bool = False, 
+        feature_extractor_backbone = None,
+        mo_insize: int = OMNIGLOT_RESNET18_IN,
+        mo_outsize: int = OMNIGLOT_RESNET18_OUT
+    ):
         super(GWNMOFS, self).__init__()
         
         if not trainable_fe:
@@ -60,8 +58,14 @@ class GWNMOFS(FSModuleABC):
         self.MO = MetaOptimizer(insize=mo_insize, outsize=mo_outsize).to(device)
         self.MO.train()
 
-        self.loss = nn.NLLLoss()
-
+        self.opt = GWNMOopt(
+            model=self.target, 
+            transform=self.MO, 
+            gamma=self.gamma, 
+            normalize=self.normalize,
+            weighting=self._weighting
+        ).to(device)  
+        
     @property
     def target(self):
         return self._target
@@ -101,13 +105,7 @@ class GWNMOFS(FSModuleABC):
         for param in clone.parameters():
             param.retain_grad()
 
-        self.opt = GWNMOopt(
-            model=clone, 
-            transform=self.MO, 
-            gamma=self.gamma, 
-            normalize=self.normalize,
-            weighting=self._weighting
-        ).to(device)      
+        self.opt.set_state(clone)    
 
         for i in range(self.adaptation_steps):
             self.opt.zero_grad()
@@ -119,19 +117,6 @@ class GWNMOFS(FSModuleABC):
             self.opt.step(adapt_X_embd)
 
         return clone(eval_X_embd)
-    
-    def map_classes(self, y):
-        flattened_y = torch.flatten(y)
-        classes_list = flattened_y.tolist()
-
-        assert len(set(classes_list)) == self.ways, f"Invalid number of classes {set(classes_list)}"
-
-        mapping_dict = dict()
-        for idx, val in enumerate(set(classes_list)):
-            mapping_dict[val] = idx
-
-        return y.apply_(lambda x: mapping_dict[x])
-        
 
     def training_step(self, batch, batch_idx):
         """
@@ -140,7 +125,7 @@ class GWNMOFS(FSModuleABC):
         """
 
         X, y = batch
-        y = self.map_classes(y)
+        y = map_classes(self.ways, y)
         adapt_X = X[:,:self.shots,:,:,:].contiguous().view( self.ways* self.shots, *X.size()[2:]) #support data 
         eval_X = X[:,self.shots:,:,:,:].contiguous().view( self.ways* self.query, *X.size()[2:]) #query data
         

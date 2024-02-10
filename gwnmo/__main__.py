@@ -31,6 +31,8 @@ if __name__ == '__main__':
     else:
         if Module == GWNMOFS:
             module = Module(args.lr, args.lr2, args.gamma, not args.nonorm, args.steps, args.ways, args.shots, args.query, args.trainable_fe, args.backbone_type)
+        else:
+            module = Module(args.lr, args.lr2, args.steps, args.ways, args.shots, args.query, args.trainable_fe, args.backbone_type)
 
         logger.get().log_model_summary(module)
 

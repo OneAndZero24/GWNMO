@@ -254,16 +254,12 @@ class ConvNetS(nn.Module): #For omniglot, only 1 input channel, output dim is 64
         if flatten:
             trunk.append(Flatten())
 
-        #trunk.append(nn.BatchNorm1d(64))    #TODO remove
-        #trunk.append(nn.ReLU(inplace=True)) #TODO remove
-        #trunk.append(nn.Linear(64, 64))     #TODO remove
         self.trunk = nn.Sequential(*trunk)
         self.final_feat_dim = 64
 
     def forward(self,x):
         out = x[:,0:1,:,:] #only use the first dimension
         out = self.trunk(out)
-        #out = torch.tanh(out) #TODO remove
         return out
 
 class ConvNetSNopool(nn.Module): #Relation net use a 4 layer conv with pooling in only first two layers, else no pooling. For omniglot, only 1 input channel, output dim is [64,5,5]
