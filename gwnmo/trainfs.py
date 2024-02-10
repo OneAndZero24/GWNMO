@@ -58,9 +58,13 @@ def train(dataset, epochs: int, module: FSModuleABC, no_weighting: int = -1):
             train_error += err
             train_accuracy += accuracy(preds, y)
 
-            err.backward(retain_graph=True)
+            err.backward(retain_graph=True, create_graph=True)
             
-            opt.step()
+        for p in module.parameters():
+            if p.grad is not None:
+                logger.get().print_to_term('grad', torch.norm(p.grad.data))
+                p.grad.data.mul_(1.0/len(train_loader))
+        opt.step()
 
         train_error /= len(train_loader)
         train_accuracy /= len(train_loader)

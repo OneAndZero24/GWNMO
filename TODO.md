@@ -3,11 +3,13 @@
 ## Few-Shot
 - **implement**
     - dedicated dataset transformations for all feature extractors
-    - *MO self-attention*
+    - **MO self-attention**
     - grad FE learning along with target, average pooling on weights/grads
     - MO batch norm
 - **debug**
-    - **batch forward in FS before weighting must be inline with reference MAML** 
+    - ~dataset~ 
+    - ~batch forward through model~
+    - *training loop*
     - for other ways and query values matrix mult fails (debug why)
 - **grids**
 
