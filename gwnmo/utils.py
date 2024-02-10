@@ -60,7 +60,7 @@ def _setup_arg_parser():
 
     parser.add_argument('epochs', type=int, help='Number of epochs to train for')
     parser.add_argument('--offline', action='store_true', help='No logging to neptune')
-    parser.add_argument('--lr', type=float, default=0.01, required=False, help='Learning rate')
+    parser.add_argument('--lr', type=float, default=0.1, required=False, help='Learning rate')
     parser.add_argument("--gamma", type=float, default=0.01, required=False, help='Gamma')
     parser.add_argument('--nonorm', action='store_true', help='Normalization in GWNMO/HG in fs & classic')
 
@@ -77,7 +77,7 @@ def _setup_arg_parser():
     parser_fs.add_argument('--lr2', type=float, default=0.01, required=False, help='Secondary learning rate')
     parser_fs.add_argument('--ways', type=int, default=5, required=False, help='Number of classes in task')
     parser_fs.add_argument('--shots', type=int, default=1, required=False, help='Number of class examples')
-    parser_fs.add_argument('--query', type=int, default=1, required=False, help='Number of samples in query set (ideally multiplicity of n_way)')
+    parser_fs.add_argument('--query', type=int, default=10, required=False, help='Number of samples in query set (ideally multiplicity of n_way)')
     parser_fs.add_argument('--steps', type=int, default=1, required=False, help='Number of adaptation steps')
     parser_fs.add_argument('--tasks', type=int, default=64, required=False, help='Number of tasksets in epoch')
     parser_fs.add_argument('--no_weighting', type=int, default=-1, required=False, help='Number of epochs for wich GWNMOFS weighting will be set to one')

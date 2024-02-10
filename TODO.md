@@ -9,7 +9,7 @@
 - **debug**
     - ~dataset~ 
     - ~batch forward through model~
-    - *training loop*
+    - ~training loop~
     - for other ways and query values matrix mult fails (debug why)
 - **grids**
 

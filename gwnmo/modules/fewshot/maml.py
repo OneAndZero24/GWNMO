@@ -6,8 +6,8 @@ import learn2learn as l2l
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
 from utils import logger, device, map_classes
-from models.target import ScallableTarget
-from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
+from models.target import ScallableTarget, Target
+from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor, SimpleFeatureExtractor
 
 class MAML(FSModuleABC):
     """
@@ -26,11 +26,12 @@ class MAML(FSModuleABC):
     ):
         super(MAML, self).__init__()
 
-        if not trainable_fe:
-            self.FE = FeatureExtractor().to(device)
-        else:
-            self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
-        self.loss = nn.CrossEntropyLoss() #nn.NLLLoss()
+        # if not trainable_fe:
+        #     self.FE = FeatureExtractor().to(device)
+        # else:
+        #     self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
+        self.FE = SimpleFeatureExtractor().to(device)
+        self.loss = nn.NLLLoss()
 
         self.lr1 = lr1
         self.lr2 = lr2
