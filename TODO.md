@@ -7,8 +7,8 @@
     - grad FE learning along with target, average pooling on weights/grads
     - MO batch norm
 - **debug**
-    - **for other ways and query values matrix mult fails (debug why)**
-    - **check for vanishing grads**
+    - **batch forward in FS before weighting must be inline with reference MAML** 
+    - for other ways and query values matrix mult fails (debug why)
 - **grids**
 
 ## Experiment improvements
