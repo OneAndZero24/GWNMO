@@ -6,11 +6,6 @@
     - **MO self-attention**
     - grad FE learning along with target, average pooling on weights/grads
     - MO batch norm
-- **debug**
-    - ~dataset~ 
-    - ~batch forward through model~
-    - ~training loop~
-    - for other ways and query values matrix mult fails (debug why)
 - **grids**
 
 ## Experiment improvements

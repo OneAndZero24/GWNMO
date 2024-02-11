@@ -26,11 +26,11 @@ class MAML(FSModuleABC):
     ):
         super(MAML, self).__init__()
 
-        # if not trainable_fe:
-        #     self.FE = FeatureExtractor().to(device)
-        # else:
-        #     self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
-        self.FE = SimpleFeatureExtractor().to(device)
+        if not trainable_fe:
+            self.FE = FeatureExtractor().to(device)
+        else:
+            self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
+        #self.FE = SimpleFeatureExtractor().to(device)
         self.loss = nn.NLLLoss()
 
         self.lr1 = lr1
@@ -49,7 +49,7 @@ class MAML(FSModuleABC):
         return self._target
 
     def reset_target(self):
-        self._target = ScallableTarget(self.ways).to(device)
+        self._target = Target().to(device)
 
     def get_state(self):
         return self.opt
@@ -91,8 +91,8 @@ class MAML(FSModuleABC):
 
         adapt_X, adapt_y, eval_X, eval_y = adapt_X.to(device), adapt_y.to(device), eval_X.to(device), eval_y.to(device)
 
-        adapt_X_embd = torch.reshape(self.FE(adapt_X), (-1, 512))
-        eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 512))
+        adapt_X_embd = torch.reshape(self.FE(adapt_X), (-1, 25088))
+        eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 25088))
 
         # logger.get().print_to_term('debug', f'Adapt X EMBD: {adapt_X_embd.shape}')
         # logger.get().print_to_term('debug', f'Eval X EMBD: {eval_X_embd.shape}')

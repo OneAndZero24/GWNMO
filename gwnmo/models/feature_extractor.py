@@ -31,7 +31,7 @@ class FeatureExtractor(nn.Module):
         resnet: tv.models.ResNet = tv.models.resnet18(weights=tv.models.ResNet18_Weights.DEFAULT)     # Pre-trained ResNet18
         layers: list[nn.Module] = list(resnet.children())
 
-        self.model = nn.Sequential(*layers[:-1])
+        self.model = nn.Sequential(*layers[:-2])
         for param in self.model.parameters():
             param.requires_grad = False
         
