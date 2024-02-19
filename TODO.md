@@ -1,7 +1,8 @@
 # TODO
 
 ## Few-Shot
-- *check GWNMOFS, consider create_graph*
+- ~~check GWNMOFS~~
+- consider create_graph
 - **implement**
     - dedicated dataset transformations for all feature extractors
     - **MO self-attention**

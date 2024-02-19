@@ -6,14 +6,14 @@ from learn2learn.utils import clone_module, detach_module
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
 from utils import device, map_classes
-from models.target import ScallableTarget
+from models.target import Target
 from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
 from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
 
 
-OMNIGLOT_RESNET18_IN = 348170
-OMNIGLOT_RESNET18_OUT = 172805
+OMNIGLOT_RESNET18_IN = 12638740
+OMNIGLOT_RESNET18_OUT = 6318090
 
 class GWNMOFS(FSModuleABC):
     """
@@ -78,7 +78,7 @@ class GWNMOFS(FSModuleABC):
         Reinitializes target model
         """
 
-        self._target = ScallableTarget(self.ways).to(device)
+        self._target = Target().to(device)
 
     def get_state(self, opt):
         """
