@@ -14,13 +14,13 @@ class Target(nn.Module):
 
         self.seq = nn.Sequential()
         self.seq.append(nn.BatchNorm1d(512))
-        self.seq.append(nn.Linear(512, 4096))
-        self.seq.append(nn.ReLU())
-        self.seq.append(nn.BatchNorm1d(4096))
-        self.seq.append(nn.Linear(4096, 1024))
+        self.seq.append(nn.Linear(512, 1024))
         self.seq.append(nn.ReLU())
         self.seq.append(nn.BatchNorm1d(1024))
-        self.seq.append(nn.Linear(1024, 10))
+        self.seq.append(nn.Linear(1024, 128))
+        self.seq.append(nn.ReLU())
+        self.seq.append(nn.BatchNorm1d(128))
+        self.seq.append(nn.Linear(128, 10))
 
     def forward(self, x: torch.Tensor):
         x = self.seq(x)

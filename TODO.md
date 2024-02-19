@@ -2,6 +2,7 @@
 
 ## Few-Shot
 - ~~check GWNMOFS~~
+- ~~make GWNMOFS fit in memory~~
 - consider create_graph
 - **implement**
     - dedicated dataset transformations for all feature extractors
