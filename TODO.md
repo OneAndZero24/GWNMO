@@ -2,7 +2,7 @@
 
 ## Few-Shot
 - ~~check GWNMOFS~~
-- make GWNMOFS fit in memory
+- *model level parallelism*
 - consider create_graph
 - **implement**
     - dedicated dataset transformations for all feature extractors
