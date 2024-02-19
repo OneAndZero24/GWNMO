@@ -43,6 +43,35 @@ class FeatureExtractor(nn.Module):
         return self.model(x)
 
 
+class SimpleFeatureExtractor(nn.Module):
+    """
+    Simple, trainable CNN FE
+    Output size is `[512]`
+    """
+
+    def __init__(self):
+        super(SimpleFeatureExtractor, self).__init__()
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
+        self.conv3 = nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1)
+        self.conv4 = nn.Conv2d(256, 512, kernel_size=3, stride=2)
+        self.pool = nn.MaxPool2d(3, 3)
+        self.relu = nn.ReLU()
+        
+    def forward(self, x):
+        x = self.relu(self.conv1(x))
+        x = self.pool(x)
+        x = self.relu(self.conv2(x))
+        x = self.pool(x)
+        x = self.relu(self.conv3(x))
+        x = self.pool(x)
+        x = self.relu(self.conv4(x))
+        x = self.pool(x)
+
+        x = torch.flatten(x, 1) 
+        return x
+
+
 # Trainable feature extractors used previously in https://github.com/gmum/few-shot-hypernets-public
 # TrainableFeatureExtractor assumes that all layers are trainable
 class TrainableFeatureExtractor(nn.Module):

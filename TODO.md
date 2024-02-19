@@ -1,15 +1,13 @@
 # TODO
 
 ## Few-Shot
+- *check GWNMOFS, consider create_graph*
 - **implement**
     - dedicated dataset transformations for all feature extractors
-    - *MO self-attention*
+    - **MO self-attention**
     - grad FE learning along with target, average pooling on weights/grads
     - MO batch norm
-- **debug**
-    - **batch forward in FS before weighting must be inline with reference MAML** 
-    - for other ways and query values matrix mult fails (debug why)
-- **grids**
+- **grids inline with few-shot-hypernets-public**
 
 ## Experiment improvements
 - **k-fold**

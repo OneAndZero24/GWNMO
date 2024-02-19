@@ -14,10 +14,13 @@ class Target(nn.Module):
 
         self.seq = nn.Sequential()
         self.seq.append(nn.BatchNorm1d(512))
-        self.seq.append(nn.Linear(512, 64))
+        self.seq.append(nn.Linear(512, 4096))
         self.seq.append(nn.ReLU())
-        self.seq.append(nn.BatchNorm1d(64))
-        self.seq.append(nn.Linear(64, 10))
+        self.seq.append(nn.BatchNorm1d(4096))
+        self.seq.append(nn.Linear(4096, 1024))
+        self.seq.append(nn.ReLU())
+        self.seq.append(nn.BatchNorm1d(1024))
+        self.seq.append(nn.Linear(1024, 10))
 
     def forward(self, x: torch.Tensor):
         x = self.seq(x)
@@ -36,13 +39,16 @@ class ScallableTarget(nn.Module):
         for i in range(9, 5, -1):
             p = 2**i
             if classes > p:
+                self.seq.append(nn.BatchNorm1d(p))
                 self.seq.append(nn.Linear(p, classes))
                 break
             else:
                 if i-1 > 5:
+                    self.seq.append(nn.BatchNorm1d(p))
                     self.seq.append(nn.Linear(p, p//2))
                     self.seq.append(nn.ReLU())
                 else:
+                    self.seq.append(nn.BatchNorm1d(p))
                     self.seq.append(nn.Linear(p, classes))
 
     def forward(self, x: torch.Tensor):
