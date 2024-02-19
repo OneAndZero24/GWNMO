@@ -1,7 +1,7 @@
 import torch
 
 from modules.fewshot.fsmodule_abc import FSModuleABC
-from utils import device, logger, accuracy
+from utils import logger, accuracy
 
 
 def test(module: FSModuleABC, test_loader, epoch: int):
@@ -62,7 +62,6 @@ def train(dataset, epochs: int, module: FSModuleABC, no_weighting: int = -1):
             
         for p in module.parameters():
             if p.grad is not None:
-                #logger.get().print_to_term('grad', torch.norm(p.grad.data))
                 p.grad.data.mul_(1.0/len(train_loader))
         opt.step()
 

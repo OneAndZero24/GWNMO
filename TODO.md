@@ -1,12 +1,13 @@
 # TODO
 
 ## Few-Shot
+- *check GWNMOFS, consider create_graph*
 - **implement**
     - dedicated dataset transformations for all feature extractors
     - **MO self-attention**
     - grad FE learning along with target, average pooling on weights/grads
     - MO batch norm
-- **grids**
+- **grids inline with few-shot-hypernets-public**
 
 ## Experiment improvements
 - **k-fold**

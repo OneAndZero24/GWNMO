@@ -30,7 +30,6 @@ class MAML(FSModuleABC):
             self.FE = FeatureExtractor().to(device)
         else:
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
-        #self.FE = SimpleFeatureExtractor().to(device)
         self.loss = nn.NLLLoss()
 
         self.lr1 = lr1
@@ -81,21 +80,12 @@ class MAML(FSModuleABC):
 
         check = (len(set(torch.unique(torch.flatten(eval_y)).tolist()).difference(set(torch.unique(torch.flatten(adapt_y)).tolist()))) == 0)
         if not check:
-            logger.get().print_to_term('debug', f'Dataset Fuckd')
-
-        # logger.get().print_to_term('debug', f'Adapt X: {adapt_X.shape}')
-        # logger.get().print_to_term('debug', f'Adapt y: {adapt_y.shape}')
-
-        # logger.get().print_to_term('debug', f'Eval X: {eval_X.shape}')
-        # logger.get().print_to_term('debug', f'Eval y: {eval_y.shape}')
+            logger.get().print_to_term('debug', f'Dataset Fckd')
 
         adapt_X, adapt_y, eval_X, eval_y = adapt_X.to(device), adapt_y.to(device), eval_X.to(device), eval_y.to(device)
 
         adapt_X_embd = torch.reshape(self.FE(adapt_X), (-1, 512))
         eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 512))
-
-        # logger.get().print_to_term('debug', f'Adapt X EMBD: {adapt_X_embd.shape}')
-        # logger.get().print_to_term('debug', f'Eval X EMBD: {eval_X_embd.shape}')
 
         preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
 
