@@ -19,7 +19,6 @@
 - optuna integration
 
 ## Further
-- model-parallelization that would allow for bigger models  
 - test network per param
 - **cross model**
 - cross dataset in classical setting MNIST -> FMNIST
