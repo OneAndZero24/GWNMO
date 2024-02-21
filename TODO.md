@@ -2,11 +2,12 @@
 
 ## Few-Shot
 - ~~check GWNMOFS~~
-- *model level parallelism*
+- *part of FE trainable + smaller target "last layer test"*
+- **model level parallelism**
 - consider create_graph
 - **implement**
     - dedicated dataset transformations for all feature extractors
-    - **MO self-attention**
+    - **self-attention layer as MO**
     - grad FE learning along with target, average pooling on weights/grads
     - MO batch norm
 - **grids inline with few-shot-hypernets-public**
@@ -20,5 +21,5 @@
 
 ## Further
 - test network per param
-- **cross model**
+- **cross target model**
 - cross dataset in classical setting MNIST -> FMNIST
