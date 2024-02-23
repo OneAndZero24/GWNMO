@@ -40,7 +40,7 @@ class FeatureExtractor(nn.Module):
         self.trainable.append(nn.Linear(512, 1024))
         self.trainable.append(nn.ReLU())
         self.trainable.append(nn.BatchNorm1d(1024))
-        self.trainable.append(nn.Linear(1024, 4096))
+        self.trainable.append(nn.Linear(1024, 8192))
         self.trainable.append(nn.ReLU())
         
 
