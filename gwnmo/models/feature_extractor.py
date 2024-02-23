@@ -35,12 +35,22 @@ class FeatureExtractor(nn.Module):
         for param in self.model.parameters():
             param.requires_grad = False
         
+        self.trainable = nn.Sequential()
+        self.trainable.append(nn.BatchNorm1d(512))
+        self.trainable.append(nn.Linear(512, 1024))
+        self.trainable.append(nn.ReLU())
+        self.trainable.append(nn.BatchNorm1d(1024))
+        self.trainable.append(nn.Linear(1024, 4096))
+        self.trainable.append(nn.ReLU())
+        
+
     def forward(self, x):
         """
         Input must have ResNet18 digestible format
         """
 
-        return self.model(x)
+        raw = torch.reshape(self.model(x), (-1, 512))
+        return raw, self.trainable(raw)
 
 
 class SimpleFeatureExtractor(nn.Module):

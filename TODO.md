@@ -2,7 +2,7 @@
 
 ## Few-Shot
 - ~~check GWNMOFS~~
-- *part of FE trainable + smaller target "last layer test"*
+- ~~part of FE trainable + smaller target "last layer test"~~
 - **model level parallelism**
 - consider create_graph
 - **implement**

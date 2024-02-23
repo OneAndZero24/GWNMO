@@ -12,8 +12,8 @@ from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
 
 
-OMNIGLOT_RESNET18_IN = 12638740
-OMNIGLOT_RESNET18_OUT = 6318090
+OMNIGLOT_RESNET18_IN = 100884
+OMNIGLOT_RESNET18_OUT = 49162
 
 class GWNMOFS(FSModuleABC):
     """
@@ -95,7 +95,7 @@ class GWNMOFS(FSModuleABC):
         self.MO = state
         self.MO.train()
 
-    def adapt(self, adapt_X_embd, adapt_y, eval_X_embd):
+    def adapt(self, adapt_X_embd, adapt_y, eval_X_embd, adapt_X_embd_raw):
         """
         Single GWNMOFS adaptation step
         """
@@ -114,7 +114,7 @@ class GWNMOFS(FSModuleABC):
             err = self.loss(preds, adapt_y)
             err.backward(retain_graph=True)
 
-            self.opt.step(adapt_X_embd)
+            self.opt.step(adapt_X_embd_raw)
 
         return clone(eval_X_embd)
 
@@ -134,12 +134,12 @@ class GWNMOFS(FSModuleABC):
 
         adapt_X, adapt_y, eval_X, eval_y = adapt_X.to(device), adapt_y.to(device), eval_X.to(device), eval_y.to(device)
 
-        adapt_X_embd = torch.reshape(self.FE(adapt_X), (-1, 512))
-        eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 512))
+        adapt_X_embd_raw, adapt_X_embd = self.FE(adapt_X)
+        _, eval_X_embd = self.FE(eval_X)
 
         detach_module(self.target, keep_requires_grad=True)
 
-        preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
+        preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd, adapt_X_embd_raw)
 
         err = self.loss(preds, eval_y)
 
