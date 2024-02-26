@@ -1,5 +1,5 @@
 # TODO
-1. *Implement model split: FE + Body + Head*
+1. ~~Implement model split: FE + Body + Head~~
 2. *Architecture from HyperMAML*
 3. *Refactor*
 4. Grad FE + Batch Norm in Weighting Network

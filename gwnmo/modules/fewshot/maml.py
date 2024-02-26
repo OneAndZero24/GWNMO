@@ -6,8 +6,8 @@ import learn2learn as l2l
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
 from utils import logger, device, map_classes
-from models.target import ScallableTarget, Target
-from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor, SimpleFeatureExtractor
+from models.target import Target
+from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
 
 class MAML(FSModuleABC):
     """

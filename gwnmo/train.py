@@ -9,7 +9,7 @@ def test(module: ModuleABC, test_loader, epoch: int):
     Test target on whole test
     """
 
-    module.target.eval()
+    module.eval()
 
     test_error = 0.0
     test_accuracy = 0.0
@@ -49,7 +49,7 @@ def train(dataset, epochs: int, reps: int, module: ModuleABC):
         opts = module.configure_optimizers()
 
         for I in range(epochs):
-            module.target.train()
+            module.train()
 
             train_error = 0.0
             train_accuracy = 0.0

@@ -6,7 +6,8 @@ from learn2learn.utils import clone_module, detach_module
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
 from utils import device, map_classes
-from models.target import Target
+from models.target import WideTarget
+from models.body import Body
 from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
 from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
@@ -41,6 +42,8 @@ class GWNMOFS(FSModuleABC):
         else:
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
         self.loss = nn.NLLLoss()
+
+        self.body = Body()
 
         self._weighting = True
 
@@ -78,7 +81,7 @@ class GWNMOFS(FSModuleABC):
         Reinitializes target model
         """
 
-        self._target = Target().to(device)
+        self._target = WideTarget().to(device)
 
     def get_state(self, opt):
         """
@@ -95,7 +98,7 @@ class GWNMOFS(FSModuleABC):
         self.MO = state
         self.MO.train()
 
-    def adapt(self, adapt_X_embd, adapt_y, eval_X_embd, adapt_X_embd_raw):
+    def adapt(self, adapt_X_embd, adapt_y, eval_X_embd):
         """
         Single GWNMOFS adaptation step
         """
@@ -110,13 +113,13 @@ class GWNMOFS(FSModuleABC):
         for i in range(self.adaptation_steps):
             self.opt.zero_grad()
 
-            preds = clone(adapt_X_embd)
+            preds = clone(self.body(adapt_X_embd))
             err = self.loss(preds, adapt_y)
             err.backward(retain_graph=True)
 
-            self.opt.step(adapt_X_embd_raw)
+            self.opt.step(adapt_X_embd)
 
-        return clone(eval_X_embd)
+        return clone(self.body(eval_X_embd))
 
     def training_step(self, batch, batch_idx):
         """
@@ -134,12 +137,12 @@ class GWNMOFS(FSModuleABC):
 
         adapt_X, adapt_y, eval_X, eval_y = adapt_X.to(device), adapt_y.to(device), eval_X.to(device), eval_y.to(device)
 
-        adapt_X_embd_raw, adapt_X_embd = self.FE(adapt_X)
-        _, eval_X_embd = self.FE(eval_X)
+        adapt_X_embd = torch.reshape(self.FE(adapt_X), (-1, 512))
+        eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 512))
 
         detach_module(self.target, keep_requires_grad=True)
 
-        preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd, adapt_X_embd_raw)
+        preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
 
         err = self.loss(preds, eval_y)
 

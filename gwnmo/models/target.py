@@ -13,8 +13,14 @@ class Target(nn.Module):
         super(Target, self).__init__()
 
         self.seq = nn.Sequential()
-        self.seq.append(nn.BatchNorm1d(8192))
-        self.seq.append(nn.Linear(8192, 10))
+        self.seq.append(nn.BatchNorm1d(512))
+        self.seq.append(nn.Linear(512, 4096))
+        self.seq.append(nn.ReLU())
+        self.seq.append(nn.BatchNorm1d(4096))
+        self.seq.append(nn.Linear(4096, 1024))
+        self.seq.append(nn.ReLU())
+        self.seq.append(nn.BatchNorm1d(1024))
+        self.seq.append(nn.Linear(1024, 10))
 
     def forward(self, x: torch.Tensor):
         x = self.seq(x)
@@ -44,6 +50,26 @@ class ScallableTarget(nn.Module):
                 else:
                     self.seq.append(nn.BatchNorm1d(p))
                     self.seq.append(nn.Linear(p, classes))
+
+    def forward(self, x: torch.Tensor):
+        x = self.seq(x)
+        return F.log_softmax(x, dim=1)
+    
+
+class WideTarget(nn.Module):
+    """
+    Target network to be trained.
+    Specifically for `GWNMOFS`.  
+
+    Works on data processed by feature extractor & body
+    """
+
+    def __init__(self):
+        super(WideTarget, self).__init__()
+
+        self.seq = nn.Sequential()
+        self.seq.append(nn.BatchNorm1d(8192))
+        self.seq.append(nn.Linear(8192, 10))
 
     def forward(self, x: torch.Tensor):
         x = self.seq(x)

@@ -8,7 +8,7 @@ def test(module: FSModuleABC, test_loader, epoch: int):
     """
     Test target on whole test
     """
-    module.target.eval()
+    module.eval()
 
     test_error = 0.0
     test_accuracy = 0.0
@@ -44,7 +44,7 @@ def train(dataset, epochs: int, module: FSModuleABC, no_weighting: int = -1):
         if I > no_weighting:
             if hasattr(module, 'toggle_weighting'):
                 module.toggle_weighting(True)
-        module.target.train()
+        module.train()
 
         train_error = 0.0
         train_accuracy = 0.0
