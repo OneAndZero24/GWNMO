@@ -6,14 +6,15 @@ from learn2learn.utils import clone_module, detach_module
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
 from utils import device, map_classes
-from models.target import Target
+from models.target import WideTarget
+from models.body import Body
 from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
 from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
 
 
-OMNIGLOT_RESNET18_IN = 12638740
-OMNIGLOT_RESNET18_OUT = 6318090
+OMNIGLOT_RESNET18_IN = 199188
+OMNIGLOT_RESNET18_OUT = 98314
 
 class GWNMOFS(FSModuleABC):
     """
@@ -41,6 +42,8 @@ class GWNMOFS(FSModuleABC):
         else:
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
         self.loss = nn.NLLLoss()
+
+        self.body = Body()
 
         self._weighting = True
 
@@ -78,7 +81,7 @@ class GWNMOFS(FSModuleABC):
         Reinitializes target model
         """
 
-        self._target = Target().to(device)
+        self._target = WideTarget().to(device)
 
     def get_state(self, opt):
         """
@@ -110,13 +113,13 @@ class GWNMOFS(FSModuleABC):
         for i in range(self.adaptation_steps):
             self.opt.zero_grad()
 
-            preds = clone(adapt_X_embd)
+            preds = clone(self.body(adapt_X_embd))
             err = self.loss(preds, adapt_y)
             err.backward(retain_graph=True)
 
             self.opt.step(adapt_X_embd)
 
-        return clone(eval_X_embd)
+        return clone(self.body(eval_X_embd))
 
     def training_step(self, batch, batch_idx):
         """

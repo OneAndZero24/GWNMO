@@ -35,6 +35,7 @@ class FeatureExtractor(nn.Module):
         for param in self.model.parameters():
             param.requires_grad = False
         
+
     def forward(self, x):
         """
         Input must have ResNet18 digestible format
