@@ -9,5 +9,7 @@
 6. GWNMO First Order vs Second Order (create_graph flag)
 7. **Tables**
 8. HyperGradient Few Shot ?
-9. Model Level Parallelism ?
+9. *Model Level Parallelism*
+    https://pytorch.org/tutorials/intermediate/FSDP_tutorial.html
+    https://pytorch.org/tutorials/intermediate/model_parallel_tutorial.html
 10. Change Target Model without Changing Weighting Network ?
