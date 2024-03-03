@@ -328,11 +328,12 @@ class ResNet(nn.Module):
         out = self.trunk(x)
         return out
 
-def Conv4():
-    return ConvNet(4)
+def Conv4(flatten):
+    return ConvNet(4, flatten)
 
 def Conv4Pool():
     return ConvNet(4, pool=True)
+
 def Conv6():
     return ConvNet(6)
 

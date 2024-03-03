@@ -17,13 +17,9 @@ class MetaOptimizer(nn.Module):
 
         super(MetaOptimizer, self).__init__()
         self.seq = nn.Sequential()
-        self.seq.append(nn.Linear(insize, 1024))
+        self.seq.append(nn.Linear(insize, 4096))
         self.seq.append(nn.ReLU())
-        self.seq.append(nn.Linear(1024, 4096))
-        self.seq.append(nn.ReLU())
-        self.seq.append(nn.Linear(4096, 1024))
-        self.seq.append(nn.ReLU())
-        self.seq.append(nn.Linear(1024, outsize))
+        self.seq.append(nn.Linear(4096, outsize))
         self.seq.append(nn.ReLU())
 
     def forward(self, params, grad, x_embd):

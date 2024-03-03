@@ -1,6 +1,8 @@
 # TODO
 1. ~~Implement model split: FE + Body + Head~~
-2. *Architecture from HyperMAML*
+2. ~~Architecture from HyperMAML~~
+    - test GWNMOFS
+    - test MAML with the same target/FE
 3. *Other FS Datasets*
 4. Grad FE + Batch Norm in Weighting Network
 5. Multihead Attention as Weighting Network
