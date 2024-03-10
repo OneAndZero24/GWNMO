@@ -4,3 +4,4 @@ lightning==2.0.2
 torchvision==0.15.2
 learn2learn==0.2.0
 neptune==1.2.0
+fairscale==0.4.13

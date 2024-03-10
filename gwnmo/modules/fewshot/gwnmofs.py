@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+from fairscale.experimental.nn.offload import OffloadModel
+
 from learn2learn.utils import clone_module, detach_module
 
 from modules.fewshot.fsmodule_abc import FSModuleABC
@@ -58,7 +60,13 @@ class GWNMOFS(FSModuleABC):
 
         self.reset_target()
 
-        self.MO = MetaOptimizer(insize=mo_insize, outsize=mo_outsize).to(device)
+        self.MO = OffloadModel(
+            model=MetaOptimizer(insize=mo_insize, outsize=mo_outsize),
+            device=device,
+            offload_device=torch.device("cpu"),
+            num_slices=3,
+            num_microbatches=1
+        )
         self.MO.train()
 
         self.opt = GWNMOopt(
