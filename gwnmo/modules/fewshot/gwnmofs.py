@@ -45,7 +45,13 @@ class GWNMOFS(FSModuleABC):
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
         self.loss = nn.NLLLoss()
 
-        self.body = Body().to(device)
+        self.body = OffloadModel(
+            model=Body(),
+            device=device,
+            offload_device=torch.device("cpu"),
+            num_slices=3,
+            num_microbatches=1
+        )
 
         self._weighting = True
 
@@ -60,13 +66,7 @@ class GWNMOFS(FSModuleABC):
 
         self.reset_target()
 
-        self.MO = OffloadModel(
-            model=MetaOptimizer(insize=mo_insize, outsize=mo_outsize).seq,
-            device=device,
-            offload_device=torch.device("cpu"),
-            num_slices=3,
-            num_microbatches=1
-        )
+        self.MO = MetaOptimizer(insize=mo_insize, outsize=mo_outsize)
         self.MO.train()
 
         self.opt = GWNMOopt(
