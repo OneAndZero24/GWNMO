@@ -46,7 +46,7 @@ class GWNMOFS(FSModuleABC):
         self.loss = nn.NLLLoss()
 
         self.body = OffloadModel(
-            model=Body(),
+            model=Body().seq,
             device=device,
             offload_device=torch.device("cpu"),
             num_slices=3,
