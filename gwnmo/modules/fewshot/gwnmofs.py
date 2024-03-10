@@ -117,7 +117,7 @@ class GWNMOFS(FSModuleABC):
             err = self.loss(preds, adapt_y)
             err.backward(retain_graph=True)
 
-            self.opt.step(adapt_X_embd)
+            self.opt.step(adapt_X_embd.detach_())
 
         return clone(self.body(eval_X_embd))
 
