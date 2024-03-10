@@ -61,7 +61,7 @@ class GWNMOFS(FSModuleABC):
         self.reset_target()
 
         self.MO = OffloadModel(
-            model=MetaOptimizer(insize=mo_insize, outsize=mo_outsize),
+            model=MetaOptimizer(insize=mo_insize, outsize=mo_outsize).seq,
             device=device,
             offload_device=torch.device("cpu"),
             num_slices=3,
