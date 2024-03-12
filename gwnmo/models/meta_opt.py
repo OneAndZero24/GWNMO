@@ -25,5 +25,5 @@ class MetaOptimizer(nn.Module):
         self.seq.append(nn.ReLU())
 
     def forward(self, params, grad, x_embd):
-        x = torch.cat([params.to('cuda:1'), grad.to('cuda:1'), x_embd.flatten().to('cuda:1')])
+        x = torch.cat([params, grad, x_embd.flatten()])
         return self.seq(x)

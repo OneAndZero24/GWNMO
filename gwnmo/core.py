@@ -50,10 +50,10 @@ class GWNMO(torch.nn.Module):
 
             grad_lengths: list[torch.Size] = [ param.grad.shape for param in params if hasattr(param, 'grad') and param.grad is not None ]
             
-            grad: torch.Tensor = torch.cat([ param.grad.flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ]).to(device)
+            grad: torch.Tensor = torch.cat([ param.grad.flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ]).to('cuda:1')
             grad.requires_grad = False
 
-            param_vals: torch.Tensor = torch.cat([ param.data.flatten() for param in params ])
+            param_vals: torch.Tensor = torch.cat([ param.data.flatten() for param in params ]).to('cuda:1')
             param_vals.requires_grad = False
 
             h: torch.Tensor = self.transform(param_vals, grad, x_embd)
