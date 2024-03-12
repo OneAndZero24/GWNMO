@@ -1,8 +1,6 @@
 # TODO
 1. ~~Implement model split: FE + Body + Head~~
 2. ~~Architecture from HyperMAML~~
-    - test GWNMOFS
-    - test MAML with the same target/FE
 3. *Other FS Datasets*
 4. ~~Offload Model/Model Parallel~~
 5. Grad FE + Batch Norm in Weighting Network
