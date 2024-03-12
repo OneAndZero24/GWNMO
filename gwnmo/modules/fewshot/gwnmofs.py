@@ -1,8 +1,6 @@
 import torch
 from torch import nn
 
-from fairscale.experimental.nn.offload import OffloadModel
-
 from learn2learn.utils import clone_module, detach_module
 
 from modules.fewshot.fsmodule_abc import FSModuleABC
@@ -40,18 +38,12 @@ class GWNMOFS(FSModuleABC):
         super(GWNMOFS, self).__init__()
         
         if not trainable_fe:
-            self.FE = FeatureExtractor().to(device)
+            self.FE = FeatureExtractor().to('cuda:0')
         else:
-            self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
+            self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to('cuda:0')
         self.loss = nn.NLLLoss()
 
-        self.body = OffloadModel(
-            model=Body().seq,
-            device=device,
-            offload_device=torch.device("cpu"),
-            num_slices=3,
-            num_microbatches=1
-        )
+        self.body = Body().to('cuda:0')
 
         self._weighting = True
 
@@ -66,7 +58,7 @@ class GWNMOFS(FSModuleABC):
 
         self.reset_target()
 
-        self.MO = MetaOptimizer(insize=mo_insize, outsize=mo_outsize)
+        self.MO = MetaOptimizer(insize=mo_insize, outsize=mo_outsize).to('cuda:1') 
         self.MO.train()
 
         self.opt = GWNMOopt(
@@ -75,7 +67,7 @@ class GWNMOFS(FSModuleABC):
             gamma=self.gamma, 
             normalize=self.normalize,
             weighting=self._weighting
-        ).to(device)  
+        ) 
         
     @property
     def target(self):
@@ -89,7 +81,7 @@ class GWNMOFS(FSModuleABC):
         Reinitializes target model
         """
 
-        self._target = Target().to(device)
+        self._target = Target().to('cuda:1')
 
     def get_state(self, opt):
         """
@@ -143,14 +135,18 @@ class GWNMOFS(FSModuleABC):
         adapt_y = y[:,:self.shots].reshape((-1))
         eval_y = y[:,self.shots:].reshape((-1))
 
-        adapt_X, adapt_y, eval_X, eval_y = adapt_X.to(device), adapt_y.to(device), eval_X.to(device), eval_y.to(device)
+        adapt_X, adapt_y, eval_X, eval_y = adapt_X.to('cuda:0'), adapt_y.to('cuda:0'), eval_X.to('cuda:0'), eval_y.to('cuda:1')
 
-        adapt_X_embd = torch.flatten(self.FE(adapt_X), -3)
-        eval_X_embd = torch.flatten(self.FE(eval_X), -3)
+        adapt_X_embd = torch.flatten(self.FE(adapt_X), -3).to('cuda:0')
+        eval_X_embd = torch.flatten(self.FE(eval_X), -3).to('cuda:1')
 
         detach_module(self.target, keep_requires_grad=True)
 
-        preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
+        # self.FE.to('cuda:1') ?
+        # self.body.to('cuda:1') ?
+        preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd).to('cuda:1')
+        # self.FE.to('cuda:0') ?
+        # self.body.to('cuda:0') ?
 
         err = self.loss(preds, eval_y)
 

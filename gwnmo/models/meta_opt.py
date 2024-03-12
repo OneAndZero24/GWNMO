@@ -1,8 +1,6 @@
 import torch
 from torch import nn
 
-from fairscale.experimental.nn.offload import OffloadModel
-
 from utils import device
 
 CLASSIC_10CLASS_WEIGHTS_SIZE = 33482
@@ -25,14 +23,7 @@ class MetaOptimizer(nn.Module):
         self.seq.append(nn.ReLU())
         self.seq.append(nn.Linear(4096, outsize))
         self.seq.append(nn.ReLU())
-        self.model = OffloadModel(
-            model=self.seq,
-            device=device,
-            offload_device=torch.device("cpu"),
-            num_slices=3,
-            num_microbatches=1
-        )
 
     def forward(self, params, grad, x_embd):
         x = torch.cat([params, grad, x_embd.flatten()])
-        return self.model(x)
+        return self.seq(x)

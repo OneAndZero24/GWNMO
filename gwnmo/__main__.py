@@ -1,3 +1,5 @@
+import torch
+
 from utils import device, parser, map2cmd, logger
 from modules.classic.adam import Adam
 from modules.classic.gwnmo import GWNMO
@@ -15,6 +17,7 @@ if __name__ == '__main__':
         logger.toggle_online()
 
     logger.get().tag(args)
+    logger.get().output('cuda_devices', torch.cuda.device_count())
 
     dataset_gen = map2cmd['dataset'][args.dataset]
     Module = map2cmd['module'][args.module]
