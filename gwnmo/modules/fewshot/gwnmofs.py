@@ -113,13 +113,13 @@ class GWNMOFS(FSModuleABC):
         for i in range(self.adaptation_steps):
             self.opt.zero_grad()
 
-            preds = clone(self.body(adapt_X_embd))
+            preds = clone(self.body(adapt_X_embd).to('device:1'))
             err = self.loss(preds, adapt_y)
             err.backward(retain_graph=True)
 
             self.opt.step(adapt_X_embd.detach())
 
-        return clone(self.body(eval_X_embd))
+        return clone(self.body(eval_X_embd).to('device:1'))
 
     def training_step(self, batch, batch_idx):
         """
@@ -138,13 +138,13 @@ class GWNMOFS(FSModuleABC):
         adapt_X, adapt_y, eval_X, eval_y = adapt_X.to('cuda:0'), adapt_y.to('cuda:0'), eval_X.to('cuda:0'), eval_y.to('cuda:1')
 
         adapt_X_embd = torch.flatten(self.FE(adapt_X), -3).to('cuda:0')
-        eval_X_embd = torch.flatten(self.FE(eval_X), -3).to('cuda:1')
+        eval_X_embd = torch.flatten(self.FE(eval_X), -3).to('cuda:0')
 
         detach_module(self.target, keep_requires_grad=True)
 
         # self.FE.to('cuda:1') ?
         # self.body.to('cuda:1') ?
-        preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd).to('cuda:1')
+        preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
         # self.FE.to('cuda:0') ?
         # self.body.to('cuda:0') ?
 
