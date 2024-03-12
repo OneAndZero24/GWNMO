@@ -113,13 +113,13 @@ class GWNMOFS(FSModuleABC):
         for i in range(self.adaptation_steps):
             self.opt.zero_grad()
 
-            preds = clone(self.body(adapt_X_embd).to('device:1'))
+            preds = clone(self.body(adapt_X_embd).to('cuda:1'))
             err = self.loss(preds, adapt_y)
             err.backward(retain_graph=True)
 
             self.opt.step(adapt_X_embd.detach())
 
-        return clone(self.body(eval_X_embd).to('device:1'))
+        return clone(self.body(eval_X_embd).to('cuda:1'))
 
     def training_step(self, batch, batch_idx):
         """
