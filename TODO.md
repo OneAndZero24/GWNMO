@@ -5,10 +5,9 @@
 4. *Good Architecture for GWNMOFS*
     - connect `param` & `grad` ?
 5. ~~Offload Model/Model Parallel~~
-6. Grad FE + Batch Norm in Weighting Network
+6. Compress grad matrix/Grad norm
 7. Multihead Attention as Weighting Network
 8. GWNMO First Order vs Second Order (create_graph flag)
 9. **Tables**
 10. HyperGradient Few Shot ?
 11. Change Target Model without Changing Weighting Network ?
-12. Compress grad matrix ?
