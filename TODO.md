@@ -3,6 +3,7 @@
 2. ~~Architecture from HyperMAML~~
 3. *Other FS Datasets*
 4. *Good Architecture for GWNMOFS*
+    - connect `param` & `grad` ?
 5. ~~Offload Model/Model Parallel~~
 6. Grad FE + Batch Norm in Weighting Network
 7. Multihead Attention as Weighting Network
@@ -10,3 +11,4 @@
 9. **Tables**
 10. HyperGradient Few Shot ?
 11. Change Target Model without Changing Weighting Network ?
+12. Compress grad matrix ?

@@ -49,11 +49,11 @@ class GWNMO(torch.nn.Module):
                     p.data.detach_()
 
             grad_lengths: list[torch.Size] = [ param.grad.shape for param in params if hasattr(param, 'grad') and param.grad is not None ]
-            
+
             grad: torch.Tensor = torch.cat([ param.grad.flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ]).to(device)
             grad.requires_grad = False
 
-            param_vals: torch.Tensor = torch.cat([ param.data.flatten() for param in params ])
+            param_vals: torch.Tensor = torch.cat([ param.data.flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ])
             param_vals.requires_grad = False
 
             h: torch.Tensor = self.transform(param_vals, grad, x_embd)
@@ -70,12 +70,13 @@ class GWNMO(torch.nn.Module):
 
             start = 0
             for i in range(len(params)):
-                params[i].detach_()
-                params[i].requires_grad = False
-                size = grad_lengths[i]
-                f_size = reduce(mul, grad_lengths[i])
-                params[i].update = updates[start:start+f_size].reshape(size) # type: ignore
-                start += f_size
+                if hasattr(params[i], 'grad') and params[i].grad is not None:
+                    params[i].detach_()
+                    params[i].requires_grad = False
+                    size = grad_lengths[i]
+                    f_size = reduce(mul, grad_lengths[i])
+                    params[i].update = updates[start:start+f_size].reshape(size) # type: ignore
+                    start += f_size
 
             l2l.update_module(model, updates=None)
 
