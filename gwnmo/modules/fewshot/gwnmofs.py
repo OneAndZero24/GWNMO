@@ -43,7 +43,7 @@ class GWNMOFS(FSModuleABC):
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
         self.loss = nn.NLLLoss()
 
-        self.body = Body()
+        self.body = Body().to(device)
 
         self._weighting = True
 
