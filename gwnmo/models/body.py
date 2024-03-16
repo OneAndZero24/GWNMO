@@ -15,10 +15,7 @@ class Body(nn.Module):
 
         self.seq = nn.Sequential()
         self.seq.append(nn.BatchNorm1d(512))
-        self.seq.append(nn.Linear(512, 1024))
-        self.seq.append(nn.ReLU())
-        self.seq.append(nn.BatchNorm1d(1024))
-        self.seq.append(nn.Linear(1024, 2048))
+        self.seq.append(nn.Linear(512, 2048))
         self.seq.append(nn.ReLU())
 
     def forward(self, x: torch.Tensor):
