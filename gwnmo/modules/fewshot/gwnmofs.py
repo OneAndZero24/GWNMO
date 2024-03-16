@@ -13,8 +13,8 @@ from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
 
 
-OMNIGLOT_RESNET18_IN = 24596
-OMNIGLOT_RESNET18_OUT = 12298
+OMNIGLOT_RESNET18_IN = 98324
+OMNIGLOT_RESNET18_OUT = 49162
 
 class GWNMOFS(FSModuleABC):
     """
