@@ -2,14 +2,13 @@ import torch
 from torch import nn
 
 CLASSIC_10CLASS_WEIGHTS_SIZE = 33482
-CLASSIC_10CLASS_IN_SIZE = 83348
 
 class MetaOptimizer(nn.Module):
     """
     Gradient weighting network in `GWNMO`
     """
 
-    def __init__(self, insize=CLASSIC_10CLASS_IN_SIZE, outsize=CLASSIC_10CLASS_WEIGHTS_SIZE):
+    def __init__(self, size=CLASSIC_10CLASS_WEIGHTS_SIZE):
         """
         insize - concat(param_vals, grad, x_embd)
         outsize - grad
@@ -25,23 +24,34 @@ class MetaOptimizer(nn.Module):
         self.embd.append(nn.Linear(1024, 256))
         self.embd.append(nn.ReLU())
 
-        self.main = nn.Sequential()
-        self.main.append(nn.Linear(insize, 2048))
-        self.main.append(nn.ReLU())
-        self.main.append(nn.Dropout(0.1))
-        self.main.append(nn.Linear(2048, 1024))
-        self.main.append(nn.ReLU())
-        self.main.append(nn.Dropout(0.1))
-        self.main.append(nn.Linear(1024, 2048))
-        self.main.append(nn.ReLU())
+        self.maing = nn.Sequential()
+        self.maing.append(nn.Linear(size, 2048))
+        self.maing.append(nn.ReLU())
+        self.maing.append(nn.Dropout(0.1))
+        self.maing.append(nn.Linear(2048, 1024))
+        self.maing.append(nn.ReLU())
+        self.maing.append(nn.Dropout(0.1))
+        self.maing.append(nn.Linear(1024, 2048))
+        self.maing.append(nn.ReLU())
         
+        self.mainp = nn.Sequential()
+        self.mainp.append(nn.Linear(size, 2048))
+        self.mainp.append(nn.ReLU())
+        self.mainp.append(nn.Dropout(0.1))
+        self.mainp.append(nn.Linear(2048, 1024))
+        self.mainp.append(nn.ReLU())
+        self.mainp.append(nn.Dropout(0.1))
+        self.mainp.append(nn.Linear(1024, 2048))
+        self.mainp.append(nn.ReLU())
+
         self.exit = nn.Sequential()
-        self.exit.append(nn.Linear(3328, 8128))
+        self.exit.append(nn.Linear(5376, 8128))
         self.exit.append(nn.ReLU())
         self.exit.append(nn.Dropout(0.1))
-        self.exit.append(nn.Linear(8128, outsize))
+        self.exit.append(nn.Linear(8128, size))
 
     def forward(self, params, grad, x_embd):
         e = self.embd(x_embd).flatten()
-        x = self.main(torch.cat([params, grad]))
-        return self.exit(torch.cat([x, e]))
+        g = self.maing(grad)
+        p = self.mainp(params)
+        return self.exit(torch.cat([g, p, e]))

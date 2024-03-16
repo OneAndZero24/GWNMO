@@ -13,8 +13,7 @@ from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
 
 
-OMNIGLOT_RESNET18_IN = 49172
-OMNIGLOT_RESNET18_OUT = 24586
+OMNIGLOT_RESNET18_WEIGHTS = 24586
 
 class GWNMOFS(FSModuleABC):
     """
@@ -32,8 +31,7 @@ class GWNMOFS(FSModuleABC):
         query: int = 10,
         trainable_fe: bool = False, 
         feature_extractor_backbone = None,
-        mo_insize: int = OMNIGLOT_RESNET18_IN,
-        mo_outsize: int = OMNIGLOT_RESNET18_OUT
+        mo_size: int = OMNIGLOT_RESNET18_WEIGHTS
     ):
         super(GWNMOFS, self).__init__()
         
@@ -58,7 +56,7 @@ class GWNMOFS(FSModuleABC):
 
         self.reset_target()
 
-        self.MO = MetaOptimizer(insize=mo_insize, outsize=mo_outsize).to(device)
+        self.MO = MetaOptimizer(size=mo_size).to(device)
         self.MO.train()
 
         self.opt = GWNMOopt(
