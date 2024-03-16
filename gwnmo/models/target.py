@@ -68,8 +68,8 @@ class WideTarget(nn.Module):
         super(WideTarget, self).__init__()
 
         self.seq = nn.Sequential()
-        self.seq.append(nn.BatchNorm1d(2560))
-        self.seq.append(nn.Linear(2560, 10))
+        self.seq.append(nn.BatchNorm1d(2048))
+        self.seq.append(nn.Linear(2048, 10))
 
     def forward(self, x: torch.Tensor):
         x = self.seq(x)
