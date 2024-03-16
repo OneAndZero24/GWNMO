@@ -5,7 +5,7 @@
 4. *Good Architecture for GWNMOFS*
     - connect `param` & `grad` ?
 5. ~~Offload Model/Model Parallel~~
-6. Compress grad matrix/Grad norm
+6. Compress grad matrix/Grad norm/Dot product matrix/diagonalization
 7. Multihead Attention as Weighting Network
 8. GWNMO First Order vs Second Order (create_graph flag)
 9. **Tables**
