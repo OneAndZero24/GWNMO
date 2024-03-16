@@ -48,6 +48,9 @@ class MetaOptimizer(nn.Module):
         self.exit.append(nn.Linear(5376, 8128))
         self.exit.append(nn.ReLU())
         self.exit.append(nn.Dropout(0.1))
+        self.exit.append(nn.Linear(8128, 8128))
+        self.exit.append(nn.ReLU())
+        self.exit.append(nn.Dropout(0.1))
         self.exit.append(nn.Linear(8128, size))
 
     def forward(self, params, grad, x_embd):

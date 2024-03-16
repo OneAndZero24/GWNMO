@@ -13,7 +13,7 @@ from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
 
 
-OMNIGLOT_RESNET18_WEIGHTS = 24586
+OMNIGLOT_RESNET18_WEIGHTS = 30730
 
 class GWNMOFS(FSModuleABC):
     """
