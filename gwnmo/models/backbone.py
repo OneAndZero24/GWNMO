@@ -251,6 +251,8 @@ class ConvNetS(nn.Module): #For omniglot, only 1 input channel, output dim is 64
             B = ConvBlock(indim, outdim, pool = ( i <4 ) ) #only pooling for fist 4 layers
             trunk.append(B)
 
+        trunk.append(nn.AdaptiveAvgPool2d((1,1)))
+
         if flatten:
             trunk.append(Flatten())
 
@@ -328,11 +330,11 @@ class ResNet(nn.Module):
         out = self.trunk(x)
         return out
 
-def Conv4():
-    return ConvNet(4)
+def Conv4(flatten):
+    return ConvNet(4, flatten)
 
-def Conv4Pool():
-    return ConvNet(4, pool=True)
+def Conv4Pool(flatten):
+    return ConvNet(4, flatten=flatten, pool=True)
 def Conv6():
     return ConvNet(6)
 
@@ -342,8 +344,8 @@ def Conv4NP():
 def Conv6NP():
     return ConvNetNopool(6)
 
-def Conv4S():
-    return ConvNetS(4)
+def Conv4S(flatten):
+    return ConvNetS(4, flatten)
 
 def Conv4SNP():
     return ConvNetSNopool(4)

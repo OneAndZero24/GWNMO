@@ -35,6 +35,7 @@ class GWNMOFS(FSModuleABC):
     ):
         super(GWNMOFS, self).__init__()
         
+        self.trainable_fe = trainable_fe
         if not trainable_fe:
             self.FE = FeatureExtractor().to(device)
         else:
@@ -137,8 +138,15 @@ class GWNMOFS(FSModuleABC):
 
         adapt_X, adapt_y, eval_X, eval_y = adapt_X.to(device), adapt_y.to(device), eval_X.to(device), eval_y.to(device)
 
-        adapt_X_embd = torch.reshape(self.FE(adapt_X), (-1, 512))
-        eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 512))
+        adapt_X_embd = self.FE(adapt_X)
+        eval_X_embd = self.FE(eval_X)
+
+        if not self.trainable_fe:
+            adapt_X_embd = torch.reshape(adapt_X_embd, (-1, 512))
+            eval_X_embd = torch.reshape(eval_X_embd, (-1, 512))
+        else:
+            adapt_X_embd = torch.flatten(adapt_X_embd, -3)
+            eval_X_embd = torch.flatten(eval_X_embd, -3)
 
         detach_module(self.target, keep_requires_grad=True)
 
