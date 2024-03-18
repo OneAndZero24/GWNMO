@@ -58,7 +58,7 @@ def train(dataset, epochs: int, module: FSModuleABC, no_weighting: int = -1):
             train_error += err
             train_accuracy += accuracy(preds, y)
 
-            err.backward(retain_graph=True)
+        err.backward(retain_graph=True)
             
         for p in module.parameters():
             if p.grad is not None:

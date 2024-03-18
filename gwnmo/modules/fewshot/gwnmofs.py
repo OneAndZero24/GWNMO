@@ -138,8 +138,12 @@ class GWNMOFS(FSModuleABC):
 
         adapt_X, adapt_y, eval_X, eval_y = adapt_X.to(device), adapt_y.to(device), eval_X.to(device), eval_y.to(device)
 
-        adapt_X_embd = self.FE(adapt_X)
-        eval_X_embd = self.FE(eval_X)
+        detach_module(self.FE)
+        FEclone = clone_module(self.FE)
+        adapt_X_embd = FEclone(adapt_X)
+        eval_X_embd = FEclone(eval_X)
+
+        self.FE = FEclone
 
         if not self.trainable_fe:
             adapt_X_embd = torch.reshape(adapt_X_embd, (-1, 512))
@@ -164,6 +168,8 @@ class GWNMOFS(FSModuleABC):
         adam = torch.optim.Adam([
             {'params': self.opt.parameters(), 'lr': self.lr1},
             {'params': self.target.parameters(), 'lr': self.lr2},
+            {'params': self.body.parameters(), 'lr': self.lr2},
+            {'params': self.FE.parameters(), 'lr': self.lr2},
         ])
 
         return adam
