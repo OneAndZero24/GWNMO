@@ -16,8 +16,8 @@ class MetaOptimizer(nn.Module):
 
         super(MetaOptimizer, self).__init__()
         self.embd = nn.Sequential()
-        self.embd.append(nn.BatchNorm1d(64))
-        self.embd.append(nn.Linear(64, 512))
+        self.embd.append(nn.BatchNorm1d(512))
+        self.embd.append(nn.Linear(512, 64))
         self.embd.append(nn.ReLU())
 
         self.maing = nn.Sequential()
@@ -35,7 +35,7 @@ class MetaOptimizer(nn.Module):
         self.mainp.append(nn.ReLU())
 
         self.exit = nn.Sequential()
-        self.exit.append(nn.Linear(3584, 1024))
+        self.exit.append(nn.Linear(1344, 1024))
         self.exit.append(nn.ReLU())
         self.exit.append(nn.Dropout(0.1))
         self.exit.append(nn.Linear(1024, 1024))
