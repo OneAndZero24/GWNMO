@@ -6,14 +6,14 @@ from learn2learn.utils import clone_module, detach_module
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
 from utils import device, map_classes
-from models.target import WideTarget
+from models.target import SmolTarget
 from models.body import Body
 from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
 from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
 
 
-OMNIGLOT_RESNET18_WEIGHTS = 24586
+OMNIGLOT_RESNET18_WEIGHTS = 9290
 
 class GWNMOFS(FSModuleABC):
     """
@@ -79,7 +79,7 @@ class GWNMOFS(FSModuleABC):
         Reinitializes target model
         """
 
-        self._target = WideTarget().to(device)
+        self._target = SmolTarget().to(device)
 
     def get_state(self, opt):
         """
@@ -111,7 +111,9 @@ class GWNMOFS(FSModuleABC):
         for i in range(self.adaptation_steps):
             self.opt.zero_grad()
 
-            preds = clone(self.body(adapt_X_embd))
+            adapt_X_embd = self.body(adapt_X_embd)
+
+            preds = clone(adapt_X_embd)
             err = self.loss(preds, adapt_y)
             err.backward(retain_graph=True)
 

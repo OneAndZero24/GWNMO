@@ -56,7 +56,7 @@ class ScallableTarget(nn.Module):
         return F.log_softmax(x, dim=1)
     
 
-class WideTarget(nn.Module):
+class SmolTarget(nn.Module):
     """
     Target network to be trained.
     Specifically for `GWNMOFS`.  
@@ -65,11 +65,13 @@ class WideTarget(nn.Module):
     """
 
     def __init__(self):
-        super(WideTarget, self).__init__()
+        super(SmolTarget, self).__init__()
 
         self.seq = nn.Sequential()
-        self.seq.append(nn.BatchNorm1d(2048))
-        self.seq.append(nn.Linear(2048, 10))
+        self.seq.append(nn.BatchNorm1d(128))
+        self.seq.append(nn.Linear(128, 64))
+        self.seq.append(nn.BatchNorm1d(64))
+        self.seq.append(nn.Linear(64, 10))
 
     def forward(self, x: torch.Tensor):
         x = self.seq(x)
