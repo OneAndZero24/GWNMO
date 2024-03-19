@@ -2,11 +2,13 @@ import torch
 from torch import nn, optim
 
 import learn2learn as l2l
+from learn2learn.utils import clone_module, detach_module
 
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
 from utils import logger, device, map_classes
 from models.target import Target
+from models.body import Body
 from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
 
 class MAML(FSModuleABC):
@@ -26,11 +28,14 @@ class MAML(FSModuleABC):
     ):
         super(MAML, self).__init__()
 
+        self.trainable_fe = trainable_fe
         if not trainable_fe:
             self.FE = FeatureExtractor().to(device)
         else:
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
         self.loss = nn.NLLLoss()
+
+        self.body = Body().to(device)
 
         self.lr1 = lr1
         self.lr2 = lr2
@@ -63,11 +68,11 @@ class MAML(FSModuleABC):
         learner.train()
 
         for i in range(self.adaptation_steps):
-            preds = learner(adapt_X_embd)
+            preds = learner(self.body(adapt_X_embd))
             err = self.loss(preds, adapt_y)
             learner.adapt(err)
 
-        return learner(eval_X_embd)
+        return learner(self.body(eval_X_embd))
 
     def training_step(self, batch, batch_idx):
         X, y = batch
@@ -84,8 +89,19 @@ class MAML(FSModuleABC):
 
         adapt_X, adapt_y, eval_X, eval_y = adapt_X.to(device), adapt_y.to(device), eval_X.to(device), eval_y.to(device)
 
-        adapt_X_embd = torch.reshape(self.FE(adapt_X), (-1, 512))
-        eval_X_embd = torch.reshape(self.FE(eval_X), (-1, 512))
+        detach_module(self.FE)
+        FEclone = clone_module(self.FE)
+        adapt_X_embd = FEclone(adapt_X)
+        eval_X_embd = FEclone(eval_X)
+
+        self.FE = FEclone
+
+        if not self.trainable_fe:
+            adapt_X_embd = torch.reshape(adapt_X_embd, (-1, 512))
+            eval_X_embd = torch.reshape(eval_X_embd, (-1, 512))
+        else:
+            adapt_X_embd = torch.flatten(adapt_X_embd, -3)
+            eval_X_embd = torch.flatten(eval_X_embd, -3)
 
         preds = self.adapt(adapt_X_embd, adapt_y, eval_X_embd)
 
@@ -94,4 +110,11 @@ class MAML(FSModuleABC):
         return (eval_y, preds, err)
 
     def configure_optimizers(self) -> list:
-        return optim.Adam(self.opt.parameters(), self.lr2)
+        adam = torch.optim.Adam([
+            {'params': self.opt.parameters(), 'lr': self.lr1},
+            {'params': self.target.parameters(), 'lr': self.lr2},
+            {'params': self.body.parameters(), 'lr': self.lr2},
+            {'params': self.FE.parameters(), 'lr': self.lr2},
+        ])
+
+        return adam
