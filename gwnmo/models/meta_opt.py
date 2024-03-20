@@ -86,6 +86,6 @@ class AttentionMetaOptimizer(nn.Module):
 
     def forward(self, params, grad, x_embd, l_grad, l_data):
         e = self.embd(x_embd).flatten()
-        x, w = self.attn(grad, params, params)
+        x, w = self.attn(params, params, grad)
         t = self.cmp(torch.cat([w.T, x.T]).T).flatten()
         return self.exit(torch.cat([t, l_grad, l_data, e]))
