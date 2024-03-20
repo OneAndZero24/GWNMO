@@ -25,7 +25,7 @@ def test(module: FSModuleABC, test_loader, epoch: int):
         }, epoch)
 
 
-def train(dataset, epochs: int, module: FSModuleABC, no_weighting: int = -1):
+def train(dataset, epochs: int, module: FSModuleABC, no_weighting: int = -1, second_order: bool = False):
     """
     FewShot training flow
     - Gets batch
@@ -58,7 +58,7 @@ def train(dataset, epochs: int, module: FSModuleABC, no_weighting: int = -1):
             train_error += err
             train_accuracy += accuracy(preds, y)
 
-            err.backward(retain_graph=True)
+            err.backward(retain_graph=True, create_graph=second_order)
             opt.step()
 
         train_error /= len(train_loader)

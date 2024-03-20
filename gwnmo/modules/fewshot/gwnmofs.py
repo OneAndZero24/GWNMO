@@ -31,10 +31,12 @@ class GWNMOFS(FSModuleABC):
         query: int = 10,
         trainable_fe: bool = False, 
         feature_extractor_backbone = None,
+        second_order: bool = False,
         mo_size: int = OMNIGLOT_RESNET18_WEIGHTS
     ):
         super(GWNMOFS, self).__init__()
         
+        self.second_order = second_order
         self.trainable_fe = trainable_fe
         if not trainable_fe:
             self.FE = FeatureExtractor().to(device)
@@ -116,7 +118,7 @@ class GWNMOFS(FSModuleABC):
 
             preds = clone(adapt_X_embd)
             err = self.loss(preds, adapt_y)
-            err.backward(retain_graph=True)
+            err.backward(retain_graph=True, create_graph=self.second_order)
 
             self.opt.step(adapt_X_embd)
 

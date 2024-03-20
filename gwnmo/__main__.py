@@ -30,11 +30,11 @@ if __name__ == '__main__':
         train(dataset_gen(), args.epochs, args.reps, module)
     else:
         if Module == GWNMOFS:
-            module = Module(args.lr, args.lr2, args.gamma, not args.nonorm, args.steps, args.ways, args.shots, args.query, args.trainable_fe, args.backbone_type)
+            module = Module(args.lr, args.lr2, args.gamma, not args.nonorm, args.steps, args.ways, args.shots, args.query, args.trainable_fe, args.backbone_type, args.second_order)
         else:
             module = Module(args.lr, args.lr2, args.steps, args.ways, args.shots, args.query, args.trainable_fe, args.backbone_type)
 
         logger.get().log_model_summary(module)
 
         dataset = dataset_gen(device, args.ways, args.shots, args.query, args.tasks)
-        train_fs(dataset, args.epochs, module, args.no_weighting)
+        train_fs(dataset, args.epochs, module, args.no_weighting, args.second_order)

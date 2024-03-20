@@ -83,6 +83,7 @@ def _setup_arg_parser():
     parser_fs.add_argument('--no_weighting', type=int, default=-1, required=False, help='Number of epochs for wich GWNMOFS weighting will be set to one')
     parser_fs.add_argument('--trainable_fe', type=bool, default=False, required=False, help='Tells if model should use trainable backbone')
     parser_fs.add_argument('--backbone_type', type=str, default="ResNet18", required=False, choices=sorted(feature_extractors.keys()), help='Specifies trainable backbone (used if trainable_fe == True)')
+    parser_fs.add_argument('--second_order', action='store_true', help='Specifies whether to use second order derivatives')
 
     return parser
 
