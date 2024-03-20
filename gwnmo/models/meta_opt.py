@@ -61,22 +61,31 @@ class AttentionMetaOptimizer(nn.Module):
         """
 
         super(AttentionMetaOptimizer, self).__init__()
-        self.attn = nn.MultiheadAttention(512, 4)
+        self.attn = nn.MultiheadAttention(1024, 4)
 
         self.embd = nn.Sequential()
-        self.embd.append(nn.BatchNorm1d(512))
-        self.embd.append(nn.Linear(512, 64))
+        self.embd.append(nn.BatchNorm1d(1024))
+        self.embd.append(nn.Linear(1024, 256))
+        self.embd.append(nn.ReLU())
+        self.embd.append(nn.BatchNorm1d(256))
+        self.embd.append(nn.Linear(256, 64))
         self.embd.append(nn.ReLU())
 
-        self.mix = nn.Sequential()
-        self.mix.append(nn.Linear(524, 64))
-        self.mix.append(nn.ReLU())
+        self.cmp = nn.Sequential()
+        self.cmp.append(nn.BatchNorm1d(1036))
+        self.cmp.append(nn.Linear(1036, 256))
+        self.cmp.append(nn.ReLU())
+        self.cmp.append(nn.BatchNorm1d(256))
+        self.cmp.append(nn.Linear(256, 64))
+        self.cmp.append(nn.ReLU())
 
         self.exit = nn.Sequential()
-        self.exit.append(nn.Linear((64*12)+20+320, size))
+        self.exit.append(nn.Linear((64*12)+20+320, 2048))
+        self.exit.append(nn.ReLU())
+        self.exit.append(nn.Linear(2048, size))
 
     def forward(self, params, grad, x_embd, l_grad, l_data):
         e = self.embd(x_embd).flatten()
         x, w = self.attn(grad, params, params)
-        t = self.mix(torch.cat([w.T, x.T]).T).flatten()
+        t = self.cmp(torch.cat([w.T, x.T]).T).flatten()
         return self.exit(torch.cat([t, l_grad, l_data, e]))
