@@ -16,9 +16,6 @@ class MetaOptimizer(nn.Module):
 
         super(MetaOptimizer, self).__init__()
         self.embd = nn.Sequential()
-        self.embd.append(nn.BatchNorm1d(1024))
-        self.embd.append(nn.Linear(1024, 512))
-        self.embd.append(nn.ReLU())
         self.embd.append(nn.BatchNorm1d(512))
         self.embd.append(nn.Linear(512, 64))
         self.embd.append(nn.ReLU())
@@ -50,3 +47,36 @@ class MetaOptimizer(nn.Module):
         g = self.maing(grad)
         p = self.mainp(params)
         return self.exit(torch.cat([g, p, e]))
+    
+
+class AttentionMetaOptimizer(nn.Module):
+    """
+    Gradient weighting network in `GWNMO`
+    """
+
+    def __init__(self, size=CLASSIC_10CLASS_WEIGHTS_SIZE):
+        """
+        insize - concat(param_vals, grad, x_embd)
+        outsize - grad
+        """
+
+        super(AttentionMetaOptimizer, self).__init__()
+        self.attn = nn.MultiheadAttention(512, 4)
+
+        self.embd = nn.Sequential()
+        self.embd.append(nn.BatchNorm1d(512))
+        self.embd.append(nn.Linear(512, 64))
+        self.embd.append(nn.ReLU())
+
+        self.mix = nn.Sequential()
+        self.mix.append(nn.Linear(524, 64))
+        self.mix.append(nn.ReLU())
+
+        self.exit = nn.Sequential()
+        self.exit.append(nn.Linear((64*12)+20+320, size))
+
+    def forward(self, params, grad, x_embd, l_grad, l_data):
+        e = self.embd(x_embd).flatten()
+        x, w = self.attn(grad, params, params)
+        t = self.mix(torch.cat([w.T, x.T]).T).flatten()
+        return self.exit(torch.cat([t, l_grad, l_data, e]))

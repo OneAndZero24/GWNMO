@@ -50,19 +50,21 @@ class GWNMO(torch.nn.Module):
 
             grad_lengths: list[torch.Size] = [ param.grad.shape for param in params if hasattr(param, 'grad') and param.grad is not None ]
 
-            grad: torch.Tensor = torch.cat([ param.grad.flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ]).to(device)
+            grad: torch.Tensor = torch.cat([ (param.grad if len(param.grad.shape) == 2 else torch.reshape(param.grad, [1, *param.grad.shape])) for param in params[:-1] if hasattr(param, 'grad') and param.grad is not None ]).to(device)
+            param_vals: torch.Tensor = torch.cat([ (param.data if len(param.data.shape) == 2 else torch.reshape(param.data, [1, *param.data.shape])) for param in params[:-1] if hasattr(param, 'grad') and param.grad is not None ]).to(device)
+            grad_f: torch.Tensor = torch.cat([ param.grad.flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ]).to(device)
             grad.requires_grad = False
-
-            param_vals: torch.Tensor = torch.cat([ param.data.flatten() for param in params if hasattr(param, 'grad') and param.grad is not None ])
             param_vals.requires_grad = False
+            grad_f.requires_grad = False
+            
 
-            h: torch.Tensor = self.transform(param_vals, grad, x_embd)
+            h: torch.Tensor = self.transform(param_vals, grad, x_embd, params[-1].grad, params[-1].data)
 
             updates: torch.Tensor
             if self.normalize:
                 updates = -self.gamma*normalize_weighting(h, grad)
             else:
-                updates = -self.gamma*h*grad
+                updates = -self.gamma*h*grad_f
 
             if not self._weighting:
                 ones = torch.ones_like(updates)

@@ -68,8 +68,8 @@ class SmolTarget(nn.Module):
         super(SmolTarget, self).__init__()
 
         self.seq = nn.Sequential()
-        self.seq.append(nn.BatchNorm1d(1024))
-        self.seq.append(nn.Linear(1024, 10))
+        self.seq.append(nn.BatchNorm1d(512))
+        self.seq.append(nn.Linear(512, 10))
 
     def forward(self, x: torch.Tensor):
         x = self.seq(x)
