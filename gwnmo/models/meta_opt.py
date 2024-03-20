@@ -61,17 +61,19 @@ class AttentionMetaOptimizer(nn.Module):
         """
 
         super(AttentionMetaOptimizer, self).__init__()
-        self.attng = nn.MultiheadAttention(64, 4)
-        self.attnp = nn.MultiheadAttention(64, 4)
+        self.attng = nn.MultiheadAttention(64, 8)
+        self.attnp = nn.MultiheadAttention(64, 8)
 
         self.exit = nn.Sequential()
-        self.exit.append(nn.Linear((76*24), 2048))
+        self.exit.append(nn.Linear((76*24)+2*10+64*5, 1024))
         self.exit.append(nn.ReLU())
-        self.exit.append(nn.Linear(2048, size))
+        self.exit.append(nn.Linear(1024, 1024))
+        self.exit.append(nn.ReLU())
+        self.exit.append(nn.Linear(1024, size))
 
     def forward(self, params, grad, x_embd, l_grad, l_data):
         xg, wg = self.attng(grad, grad, grad)
         xp, wp = self.attnp(params, params, params)
         g = torch.cat([xg.T, wg.T]).flatten()
         p = torch.cat([xp.T, wp.T]).flatten()
-        return self.exit(torch.cat([g, p]))
+        return self.exit(torch.cat([g, p, x_embd.flatten(), l_grad, l_data]))
