@@ -56,9 +56,13 @@ class GWNMO(torch.nn.Module):
             grad.requires_grad = False
             param_vals.requires_grad = False
             grad_f.requires_grad = False
-            
 
-            h: torch.Tensor = self.transform(param_vals, grad, x_embd, params[-1].grad, params[-1].data)
+            g_l: torch.Tensor = params[-1].grad
+            p_l: torch.Tensor = params[-1].data
+            g_l.requires_grad = False
+            p_l.requires_grad = False
+
+            h: torch.Tensor = self.transform(param_vals, grad, x_embd, g_l, p_l)
 
             updates: torch.Tensor
             if self.normalize:
