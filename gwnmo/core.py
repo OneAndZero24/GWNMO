@@ -62,7 +62,7 @@ class GWNMO(torch.nn.Module):
 
             updates: torch.Tensor
             if self.normalize:
-                updates = -self.gamma*normalize_weighting(h, grad)
+                updates = -self.gamma*normalize_weighting(h, grad_f)
             else:
                 updates = -self.gamma*h*grad_f
 
