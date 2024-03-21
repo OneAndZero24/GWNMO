@@ -22,7 +22,8 @@ class GWNMOFS(FSModuleABC):
 
     def __init__(self, 
         lr1: float = 0.01,
-        lr2: float = 0.01,  
+        lr2: float = 0.01,
+        fe_lr: float = 0.01,    
         gm: float = 0.001,
         normalize: bool = True, 
         adaptation_steps: int = 1, 
@@ -50,6 +51,7 @@ class GWNMOFS(FSModuleABC):
 
         self.lr1 = lr1
         self.lr2 = lr2
+        self.fe_lr = fe_lr
         self.gamma = gm
         self.normalize = normalize
         self.adaptation_steps = adaptation_steps
@@ -111,9 +113,8 @@ class GWNMOFS(FSModuleABC):
 
         self.opt.set_state(clone)    
 
+        self.opt.zero_grad()
         for i in range(self.adaptation_steps):
-            self.opt.zero_grad()
-
             adapt_X_embd = self.body(adapt_X_embd)
 
             preds = clone(adapt_X_embd)
@@ -171,7 +172,7 @@ class GWNMOFS(FSModuleABC):
             {'params': self.opt.parameters(), 'lr': self.lr1},
             {'params': self.target.parameters(), 'lr': self.lr2},
             {'params': self.body.parameters(), 'lr': self.lr2},
-            {'params': self.FE.parameters(), 'lr': self.lr2},
+            {'params': self.FE.parameters(), 'lr': self.fe_lr},
         ])
 
         return adam
