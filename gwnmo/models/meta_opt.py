@@ -68,9 +68,12 @@ class AttentionMetaOptimizer(nn.Module):
         self.embd.append(nn.BatchNorm1d(512))
         self.embd.append(nn.Linear(512, 64))
         self.embd.append(nn.ReLU())
+        self.embd.append(nn.BatchNorm1d(64))
+        self.embd.append(nn.Linear(64, 8))
+        self.embd.append(nn.ReLU())
 
         self.exit = nn.Sequential()
-        self.exit.append(nn.Linear((524*24)+2*10+64*5, 4096))
+        self.exit.append(nn.Linear((524*24)+2*10+8*5, 4096))
         self.exit.append(nn.ReLU())
         self.exit.append(nn.Linear(4096, 2048))
         self.exit.append(nn.ReLU())
