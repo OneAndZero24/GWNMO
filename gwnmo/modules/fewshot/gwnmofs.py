@@ -13,7 +13,7 @@ from models.meta_opt import MetaOptimizer, AttentionMetaOptimizer
 from core import GWNMO as GWNMOopt
 
 
-OMNIGLOT_RESNET18_WEIGHTS = 778
+OMNIGLOT_RESNET18_WEIGHTS = 6154
 
 class GWNMOFS(FSModuleABC):
     """
@@ -44,7 +44,7 @@ class GWNMOFS(FSModuleABC):
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
         self.loss = nn.NLLLoss()
 
-        self.body = nn.Identity().to(device)
+        self.body = Body().to(device)
 
         self._weighting = True
 
