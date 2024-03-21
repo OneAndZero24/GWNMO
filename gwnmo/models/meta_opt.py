@@ -61,19 +61,19 @@ class AttentionMetaOptimizer(nn.Module):
         """
 
         super(AttentionMetaOptimizer, self).__init__()
-        self.attng = nn.MultiheadAttention(512, 8)
-        self.attnp = nn.MultiheadAttention(512, 8)
+        self.attng = nn.MultiheadAttention(1024, 8)
+        self.attnp = nn.MultiheadAttention(1024, 8)
 
         self.embd = nn.Sequential()
-        self.embd.append(nn.BatchNorm1d(512))
-        self.embd.append(nn.Linear(512, 64))
+        self.embd.append(nn.BatchNorm1d(1024))
+        self.embd.append(nn.Linear(1024, 256))
         self.embd.append(nn.ReLU())
-        self.embd.append(nn.BatchNorm1d(64))
-        self.embd.append(nn.Linear(64, 8))
+        self.embd.append(nn.BatchNorm1d(256))
+        self.embd.append(nn.Linear(256, 8))
         self.embd.append(nn.ReLU())
 
         self.exit = nn.Sequential()
-        self.exit.append(nn.Linear((524*24)+2*10+8*5, 4096))
+        self.exit.append(nn.Linear((1036*24)+2*10+8*5, 4096))
         self.exit.append(nn.ReLU())
         self.exit.append(nn.Linear(4096, 2048))
         self.exit.append(nn.ReLU())
