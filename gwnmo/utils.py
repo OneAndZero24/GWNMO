@@ -139,6 +139,7 @@ map2cmd = {
         "fmnist": setup_FMNIST,
         "cifar10": setup_CIFAR10,
         "svhn": setup_SVHN,
-        "omniglot": experimental_setup_FS_Omniglot
+        "omniglot": experimental_setup_FS_Omniglot,
+        "miniImagenet": experimental_setup_FS_MiniImagenet,
     }
 }
