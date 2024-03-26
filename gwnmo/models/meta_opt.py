@@ -72,6 +72,10 @@ class AttentionMetaOptimizer(nn.Module):
         self.embd.append(nn.Linear(256, 8))
         self.embd.append(nn.ReLU())
 
+        self.q = nn.Sequential()
+
+        self.k = nn.Sequential()
+
         self.exit = nn.Sequential()
         self.exit.append(nn.Linear((1036*24)+2*10+8*5, 4096))
         self.exit.append(nn.ReLU())
@@ -82,9 +86,13 @@ class AttentionMetaOptimizer(nn.Module):
         self.exit.append(nn.Linear(1024, size))
 
     def forward(self, params, grad, x_embd, l_grad, l_data):
+        # [12, 1024]
+        values = grad
         x_embd = self.embd(x_embd).flatten()
-        xg, wg = self.attng(grad, grad, grad)
+        tmp = torch.Tensor([in list(zip(params, grad))]) # TODO networks for q, k (what to choose for q, k)
+        xg, wg = self.attng(grad, grad, grad) # TODO pass one by one dont flatten before exit FC
         xp, wp = self.attnp(params, params, params)
+        # TODO transpose w after attn
         g = torch.cat([xg.T, wg.T]).flatten()
         p = torch.cat([xp.T, wp.T]).flatten()
         return self.exit(torch.cat([g, p, x_embd, l_grad, l_data]))

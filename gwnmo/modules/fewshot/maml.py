@@ -46,7 +46,7 @@ class MAML(FSModuleABC):
         
         self.reset_target()
 
-        self.opt = l2l.algorithms.MAML(self.target, lr=lr1)
+        self.opt = l2l.algorithms.MAML(self.target, lr=lr1) # TODO 1 adapt step
 
     @property
     def target(self):
