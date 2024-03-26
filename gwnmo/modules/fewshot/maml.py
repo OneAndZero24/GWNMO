@@ -114,8 +114,7 @@ class MAML(FSModuleABC):
 
     def configure_optimizers(self) -> list:
         adam = torch.optim.Adam([
-            {'params': self.opt.parameters(), 'lr': self.lr1},
-            {'params': self.target.parameters(), 'lr': self.lr2},
+            {'params': self.opt.parameters(), 'lr': self.lr2},
             {'params': self.body.parameters(), 'lr': self.lr2},
             {'params': self.FE.parameters(), 'lr': self.fe_lr},
         ])
