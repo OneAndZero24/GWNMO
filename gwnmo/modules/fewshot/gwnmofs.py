@@ -13,7 +13,7 @@ from models.meta_opt import MetaOptimizer
 from core import GWNMO as GWNMOopt
 
 
-OMNIGLOT_RESNET18_WEIGHTS = 12298
+OMNIGLOT_CONV4P_WEIGHTS = 778
 
 class GWNMOFS(FSModuleABC):
     """
@@ -23,6 +23,7 @@ class GWNMOFS(FSModuleABC):
     def __init__(self, 
         lr1: float = 0.01,
         lr2: float = 0.01,  
+        fe_lr: float = 0.01, 
         gm: float = 0.001,
         normalize: bool = True, 
         adaptation_steps: int = 1, 
@@ -32,7 +33,7 @@ class GWNMOFS(FSModuleABC):
         trainable_fe: bool = False, 
         feature_extractor_backbone = None,
         second_order: bool = False,
-        mo_size: int = OMNIGLOT_RESNET18_WEIGHTS
+        mo_size: int = OMNIGLOT_CONV4P_WEIGHTS
     ):
         super(GWNMOFS, self).__init__()
         
@@ -44,12 +45,13 @@ class GWNMOFS(FSModuleABC):
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
         self.loss = nn.NLLLoss()
 
-        self.body = Body().to(device)
+        self.body = nn.Identity().to(device)
 
         self._weighting = True
 
         self.lr1 = lr1
         self.lr2 = lr2
+        self.fe_lr = fe_lr
         self.gamma = gm
         self.normalize = normalize
         self.adaptation_steps = adaptation_steps
@@ -110,10 +112,8 @@ class GWNMOFS(FSModuleABC):
             param.retain_grad()
 
         self.opt.set_state(clone)    
-
+        self.opt.zero_grad()
         for i in range(self.adaptation_steps):
-            self.opt.zero_grad()
-
             adapt_X_embd = self.body(adapt_X_embd)
 
             preds = clone(adapt_X_embd)
@@ -171,7 +171,7 @@ class GWNMOFS(FSModuleABC):
             {'params': self.opt.parameters(), 'lr': self.lr1},
             {'params': self.target.parameters(), 'lr': self.lr2},
             {'params': self.body.parameters(), 'lr': self.lr2},
-            {'params': self.FE.parameters(), 'lr': self.lr2},
+            {'params': self.FE.parameters(), 'lr': self.fe_lr},
         ])
 
         return adam

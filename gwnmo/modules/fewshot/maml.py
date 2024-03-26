@@ -7,7 +7,7 @@ from learn2learn.utils import clone_module, detach_module
 from modules.fewshot.fsmodule_abc import FSModuleABC
 
 from utils import logger, device, map_classes
-from models.target import Target
+from models.target import SmolTarget
 from models.body import Body
 from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
 
@@ -19,12 +19,14 @@ class MAML(FSModuleABC):
     def __init__(self,
         lr1: float = 0.01,
         lr2: float = 0.01,
+        fe_lr: float = 0.01, 
         adaptation_steps: int = 1,
         ways: int = 5,
         shots: int = 1,
         query: int = 10,
         trainable_fe: bool = False, 
-        feature_extractor_backbone = None
+        feature_extractor_backbone = None,
+        second_order: bool = False,
     ):
         super(MAML, self).__init__()
 
@@ -35,10 +37,11 @@ class MAML(FSModuleABC):
             self.FE = TrainableFeatureExtractor(backbone_name=feature_extractor_backbone, flatten=True).to(device)
         self.loss = nn.NLLLoss()
 
-        self.body = Body().to(device)
+        self.body = nn.Identity().to(device)
 
         self.lr1 = lr1
         self.lr2 = lr2
+        self.fe_lr = fe_lr
         self.adaptation_steps = adaptation_steps
         self.ways = ways
         self.shots = shots
@@ -46,14 +49,14 @@ class MAML(FSModuleABC):
         
         self.reset_target()
 
-        self.opt = l2l.algorithms.MAML(self.target, lr=lr1)
+        self.opt = l2l.algorithms.MAML(self.target, lr=lr1, first_order=(not second_order))
 
     @property
     def target(self):
         return self._target
 
     def reset_target(self):
-        self._target = Target().to(device)
+        self._target = SmolTarget().to(device)
 
     def get_state(self):
         return self.opt
@@ -114,7 +117,7 @@ class MAML(FSModuleABC):
             {'params': self.opt.parameters(), 'lr': self.lr1},
             {'params': self.target.parameters(), 'lr': self.lr2},
             {'params': self.body.parameters(), 'lr': self.lr2},
-            {'params': self.FE.parameters(), 'lr': self.lr2},
+            {'params': self.FE.parameters(), 'lr': self.fe_lr},
         ])
 
         return adam
