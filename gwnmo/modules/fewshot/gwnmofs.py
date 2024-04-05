@@ -9,7 +9,7 @@ from utils import device, map_classes
 from models.target import SmolTarget
 from models.body import Body
 from models.feature_extractor import FeatureExtractor, TrainableFeatureExtractor
-from models.meta_opt import MetaOptimizer
+from models.meta_opt import FSMetaOptimizer
 from core import GWNMO as GWNMOopt
 
 
@@ -61,7 +61,7 @@ class GWNMOFS(FSModuleABC):
 
         self.reset_target()
 
-        self.MO = MetaOptimizer(size=mo_size).to(device)
+        self.MO = FSMetaOptimizer(size=mo_size).to(device)
         self.MO.train()
 
         self.opt = GWNMOopt(

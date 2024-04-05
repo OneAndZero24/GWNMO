@@ -6,21 +6,14 @@ import torch.nn.functional as F
 class Target(nn.Module):
     """
     Target network to be trained.
-    Works on data processed by feature extractor (output of `FeatureExtractor`)
+    Works on data processed by feature extractor (output of `FeatEx`)
     """
-
     def __init__(self):
         super(Target, self).__init__()
 
         self.seq = nn.Sequential()
-        self.seq.append(nn.BatchNorm1d(512))
-        self.seq.append(nn.Linear(512, 4096))
-        self.seq.append(nn.ReLU())
-        self.seq.append(nn.BatchNorm1d(4096))
-        self.seq.append(nn.Linear(4096, 1024))
-        self.seq.append(nn.ReLU())
-        self.seq.append(nn.BatchNorm1d(1024))
-        self.seq.append(nn.Linear(1024, 10))
+        self.seq.append(nn.Linear(512, 64))
+        self.seq.append(nn.Linear(64, 10))
 
     def forward(self, x: torch.Tensor):
         x = self.seq(x)

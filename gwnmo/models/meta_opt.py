@@ -3,9 +3,9 @@ from torch import nn
 
 CLASSIC_10CLASS_WEIGHTS_SIZE = 33482
 
-class MetaOptimizer(nn.Module):
+class FSMetaOptimizer(nn.Module):
     """
-    Gradient weighting network in `GWNMO`
+    Gradient weighting network in `GWNMOFS`
     """
 
     def __init__(self, size=CLASSIC_10CLASS_WEIGHTS_SIZE):
@@ -14,7 +14,7 @@ class MetaOptimizer(nn.Module):
         outsize - grad
         """
 
-        super(MetaOptimizer, self).__init__()
+        super(FSMetaOptimizer, self).__init__()
         self.embd = nn.Sequential()
         self.embd.append(nn.BatchNorm1d(64))
         self.embd.append(nn.Linear(64, 8))
@@ -44,3 +44,22 @@ class MetaOptimizer(nn.Module):
         g = self.maing(grad)
         p = self.mainp(params)
         return self.exit(torch.cat([g, p, e]))
+    
+
+class MetaOptimizer(nn.Module):
+    """
+    Gradient weighting network in `GWNMO`
+    """
+    def __init__(self):
+        super(MetaOptimizer, self).__init__()
+        self.seq = nn.Sequential()
+        self.seq.append(nn.Linear(83348, 128))
+        self.seq.append(nn.ReLU())
+        self.seq.append(nn.Linear(128, 32))
+        self.seq.append(nn.ReLU())
+        self.seq.append(nn.Linear(32, 33482))
+        self.seq.append(nn.ReLU())
+
+    def forward(self, params, grad, x_embd):
+        x = torch.cat([params, grad, x_embd.flatten()])
+        return self.seq(x)

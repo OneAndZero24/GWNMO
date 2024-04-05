@@ -23,7 +23,7 @@ python gwnmo -h
 Example:  
 ```
 # Classic
-python gwnmo 100 classic --reps=1 --dataset=mnist --module=gwnmo --lr=0.01 --gamma=0.01
+python gwnmo 100 --lr=0.01 --gamma=0.01 classic --reps=1 --dataset=mnist --module=gwnmo
 # FewShot
 python gwnmo 100 fewshot --dataset=omniglot --module=gwnmofs
 ```
