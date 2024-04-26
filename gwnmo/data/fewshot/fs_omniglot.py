@@ -16,33 +16,12 @@ import torch
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from torchvision.models import ResNet18_Weights
+from .utils import DataManager, SubDataset
 # TO DO: Add method for checking integrity with md5 hashes
-
 DATASET_DIR = os.getenv('DATASET_DIR')
-if DATASET_DIR is None:
-    DATASET_DIR = '/shared/sets/datasets'
-
-IDENTITY = lambda x:x
-
-class FSOmniglotSubDataset:
-    def __init__(self, sub_meta, cl, transform=transforms.ToTensor(), target_transform=IDENTITY):
-        self.sub_meta = sub_meta
-        self.cl = cl 
-        self.transform = transform
-        self.target_transform = target_transform
-
-    def __getitem__(self,i):
-        image_path = os.path.join( self.sub_meta[i])
-        img = Image.open(image_path, mode="r").convert("L")
-        img = self.transform(img)
-        target = self.target_transform(self.cl)
-        return img, target
-
-    def __len__(self):
-        return len(self.sub_meta)
 
 class FSOmniglot(VisionDataset):
-    folder = 'omniglot-fewshot'
+    folder = 'fs-omniglot'
 
     train_url = 'https://raw.githubusercontent.com/jakesnell/prototypical-networks/master/data/omniglot/splits/vinyals/train.txt'
     val_url = 'https://raw.githubusercontent.com/jakesnell/prototypical-networks/master/data/omniglot/splits/vinyals/val.txt'
@@ -96,7 +75,7 @@ class FSOmniglot(VisionDataset):
         )
 
         for cl in self.cl_list:
-            sub_dataset = FSOmniglotSubDataset(self.sub_meta[cl], cl, transform = transform)
+            sub_dataset = SubDataset(self.sub_meta[cl], cl, transform = transform)
             self.sub_dataloader.append(DataLoader(sub_dataset, **sub_data_loader_params))
         
     def _get_and_extract_zip(self, url):
@@ -253,41 +232,6 @@ class FSOmniglot(VisionDataset):
 
     def __len__(self):
         return len(self.cl_list)
-    
-
-# HELPER CLASSES
-    
-class EpisodicBatchSampler(object):
-    def __init__(self, n_classes, n_way, n_episodes):
-        self.n_classes = n_classes
-        self.n_way = n_way
-        self.n_episodes = n_episodes
-
-    def __len__(self):
-        return self.n_episodes
-
-    def __iter__(self):
-        for i in range(self.n_episodes):
-            yield torch.randperm(self.n_classes)[:self.n_way]
-    
-class FSOmniglotDataManager:
-    def __init__(self, image_size: int, n_way: int, n_support: int, n_query: int, transform: Any, root: str, n_episode = 100, download = True):        
-        self.image_size = image_size
-        self.n_way = n_way
-        self.batch_size = n_support + n_query
-        self.n_episode = n_episode
-        self.transform = transform 
-        self.download = download
-        self.root = root
-
-    def get_data_loader(self, type): #parameters that would change on train/val set
-        dataset = FSOmniglot(root=self.root, download=self.download, type=type, transform=self.transform, batch_size=self.batch_size)
-        sampler = EpisodicBatchSampler(len(dataset), self.n_way, self.n_episode)  
-        self.download = False # download only once
-
-        data_loader_params = dict(batch_sampler = sampler, pin_memory=True)
-        data_loader = DataLoader(dataset, **data_loader_params)
-        return data_loader
 
 # tasks here is equivalent of episodes
 def experimental_setup_FS_Omniglot(device, ways, shots, query, tasks):
@@ -299,7 +243,7 @@ def experimental_setup_FS_Omniglot(device, ways, shots, query, tasks):
         ResNet18_Weights.DEFAULT.transforms(antialias=True) 
     ]) 
     
-    omniglot_data_manager = FSOmniglotDataManager(
+    omniglot_data_manager = DataManager(
         image_size=image_size, 
         n_way=ways, 
         n_support=shots, 
@@ -307,7 +251,8 @@ def experimental_setup_FS_Omniglot(device, ways, shots, query, tasks):
         n_episode=tasks, 
         download=True, 
         transform=transform, 
-        root=DATASET_DIR
+        root=DATASET_DIR,
+        dataset_class=FSOmniglot,
     )
 
     train_loader = omniglot_data_manager.get_data_loader(type='base')
